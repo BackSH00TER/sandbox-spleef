@@ -14,6 +14,16 @@ public sealed class PlayerReadyState : Component
 
     public string DisplayName => Network.Owner?.DisplayName ?? "Unknown";
 
+    public int WinCount
+    {
+        get
+        {
+            ulong steamId = Network.Owner?.SteamId ?? 0UL;
+            if ( steamId == 0UL ) return 0;
+            return Leaderboard.GetWins( steamId );
+        }
+    }
+
     protected override void OnStart()
     {
         // Only show the overhead indicator when there's a lobby in this scene.

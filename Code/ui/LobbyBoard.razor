@@ -21,9 +21,13 @@
             <div class="grid">
                 @foreach (PlayerReadyState player in Scene.GetAllComponents<PlayerReadyState>())
                 {
-                    <div class="cell">
+                    <div class="cell @(player.IsReady ? "ready" : "notready")">
+                        <img class="avatar" src="avatar:@(player.Network.Owner.SteamId)" />
                         <div class="name">@player.DisplayName</div>
-                        <div class="dot @(player.IsReady ? "ready" : "notready")"></div>
+                        <div class="wins" title="Wins">
+                            <div class="trophy">🏆</div>
+                            <div class="count">@player.WinCount</div>
+                        </div>
                     </div>
                 }
             </div>
@@ -45,7 +49,7 @@
     protected override int BuildHash()
     {
         IEnumerable<string> parts = Scene.GetAllComponents<PlayerReadyState>()
-            .Select(p => $"{p.DisplayName}:{p.IsReady}");
+            .Select(p => $"{p.DisplayName}:{p.IsReady}:{p.WinCount}");
         return System.HashCode.Combine(string.Join(",", parts), LaunchSeconds, LobbyManager.HasActiveLobbyMessage);
     }
 }
