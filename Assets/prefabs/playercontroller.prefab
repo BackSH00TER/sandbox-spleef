@@ -198,12 +198,6 @@
         "__guid": "9968c7a9-e541-4a7c-900b-2cd7dd15fc34",
         "__enabled": true,
         "Flags": 0,
-        "Circle": {
-          "_type": "component",
-          "component_id": "658825d8-b38b-4e01-9100-f4258ecd85d5",
-          "go": "3504a76a-72cc-4c08-9e5c-e69d0e955452",
-          "component_type": "ModelRenderer"
-        },
         "Crown": {
           "_type": "component",
           "component_id": "cb244c84-fef8-47c3-81a7-bf626fe299e5",
@@ -511,52 +505,6 @@
             "Static": false,
             "Surface": null,
             "SurfaceVelocity": "0,0,0"
-          }
-        ],
-        "Children": []
-      },
-      {
-        "__guid": "3504a76a-72cc-4c08-9e5c-e69d0e955452",
-        "__version": 2,
-        "Flags": 0,
-        "Name": "ReadyStateIndicator",
-        "Position": "0,0,78.286026",
-        "Rotation": "0,0,0,1",
-        "Scale": "0.100000001,0.100000001,0.100000001",
-        "Tags": "",
-        "Enabled": true,
-        "NetworkMode": 2,
-        "NetworkFlags": 0,
-        "NetworkOrphaned": 0,
-        "NetworkTransmit": true,
-        "OwnerTransfer": 1,
-        "Components": [
-          {
-            "__type": "Sandbox.ModelRenderer",
-            "__guid": "658825d8-b38b-4e01-9100-f4258ecd85d5",
-            "__enabled": true,
-            "Flags": 0,
-            "BodyGroups": 18446744073709551615,
-            "CreateAttachments": false,
-            "LodOverride": null,
-            "MaterialGroup": null,
-            "MaterialOverride": null,
-            "Materials": null,
-            "Model": "models/dev/sphere.vmdl",
-            "OnComponentDestroy": null,
-            "OnComponentDisabled": null,
-            "OnComponentEnabled": null,
-            "OnComponentFixedUpdate": null,
-            "OnComponentStart": null,
-            "OnComponentUpdate": null,
-            "RenderOptions": {
-              "GameLayer": true,
-              "OverlayLayer": false,
-              "BloomLayer": false,
-              "AfterUILayer": false
-            },
-            "RenderType": "Off",
-            "Tint": "1,0,0,1"
           }
         ],
         "Children": []
