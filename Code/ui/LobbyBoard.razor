@@ -23,6 +23,7 @@
                 {
                     <div class="cell">
                         <div class="dot @(player.IsReady ? "ready" : "notready")"></div>
+                        <img class="avatar" src="avatar:@(player.Network.Owner.SteamId)" />
                         <div class="name">@player.DisplayName</div>
                         <div class="wins" title="Wins">
                             <div class="trophy">🏆</div>
