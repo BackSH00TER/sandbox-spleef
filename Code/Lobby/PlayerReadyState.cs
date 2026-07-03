@@ -25,31 +25,20 @@ public sealed class PlayerReadyState : Component
         }
     }
 
-    protected override void OnEnabled()
-    {
-        Leaderboard.Changed += ApplyCrownVisibility;
-    }
-
-    protected override void OnDisabled()
-    {
-        Leaderboard.Changed -= ApplyCrownVisibility;
-    }
-
     protected override void OnStart()
     {
-        ApplyCrownVisibility();
+        RefreshCrown();
     }
 
-    private void ApplyCrownVisibility()
+    public void RefreshCrown()
     {
         if ( !Crown.IsValid() ) return;
-        ulong steamId = Network.Owner?.SteamId ?? 0UL;
-        bool shouldShow = steamId != 0UL && steamId == Leaderboard.PreviousWinnerSteamId;
+        Crown.GameObject.Enabled = false;
 
-        GameObject crownGameObject = Crown.GameObject;
-        if ( crownGameObject.Enabled != shouldShow )
+        ulong steamId = Network.Owner?.SteamId ?? 0UL;
+        if ( steamId != 0UL && steamId == Leaderboard.PreviousWinnerSteamId )
         {
-            crownGameObject.Enabled = shouldShow;
+            Crown.GameObject.Enabled = true;
         }
     }
 }

@@ -86,6 +86,15 @@ public sealed class LobbyNetworkSpawner : Component, Component.INetworkListener
     private void BroadcastLeaderboardSnapshot( ulong[] steamIds, int[] counts, ulong previousWinnerSteamId )
     {
         Leaderboard.ApplySnapshot( steamIds, counts, previousWinnerSteamId );
+        RefreshAllCrowns();
+    }
+
+    private void RefreshAllCrowns()
+    {
+        foreach ( PlayerReadyState state in Scene.GetAllComponents<PlayerReadyState>() )
+        {
+            state.RefreshCrown();
+        }
     }
 
     // Returns true if the given connection already has a player controller in the scene.

@@ -521,5 +521,9 @@ public sealed class VictoryManager : Component
         {
             PlayerStats.RecordWin();
         }
+        foreach ( PlayerReadyState state in Scene.GetAllComponents<PlayerReadyState>() )
+        {
+            state.RefreshCrown();
+        }
     }
 }

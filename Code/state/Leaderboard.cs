@@ -14,9 +14,6 @@ public static class Leaderboard
     /// <summary>Steam ID of the player who won the most recent round, or 0 if no round has been played yet.</summary>
     public static ulong PreviousWinnerSteamId { get; private set; }
 
-    /// <summary>Fires whenever the store changes (a win recorded, or a snapshot applied).</summary>
-    public static event System.Action Changed;
-
     public static int GetWins( ulong steamId )
     {
         return _wins.GetValueOrDefault( steamId, 0 );
@@ -27,7 +24,6 @@ public static class Leaderboard
         if ( steamId == 0 ) return;
         _wins[steamId] = GetWins( steamId ) + 1;
         PreviousWinnerSteamId = steamId;
-        Changed?.Invoke();
     }
 
     // Overwrite the local store with the host's authoritative view. Safe to call on
@@ -43,7 +39,6 @@ public static class Leaderboard
             _wins[steamIds[i]] = counts[i];
         }
         PreviousWinnerSteamId = previousWinnerSteamId;
-        Changed?.Invoke();
     }
 
     // Return a snapshot of the current store for broadcasting to late joiners.
