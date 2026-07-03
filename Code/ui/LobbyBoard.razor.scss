@@ -53,6 +53,28 @@ LobbyBoard {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            flex-grow: 1;
+            margin-left: 32px;
+        }
+
+        .wins {
+            flex-direction: row;
+            align-items: center;
+            font-size: 96px;
+            font-weight: 700;
+            color: #ffcc33;
+            min-width: 120px;
+            justify-content: flex-end;
+
+            .trophy {
+                font-size: 80px;
+                margin-right: 16px;
+            }
+
+            .count {
+                min-width: 60px;
+                justify-content: flex-end;
+            }
         }
 
         .dot {

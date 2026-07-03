@@ -152,6 +152,14 @@ public sealed class VictoryManager : Component
 
         BroadcastResultsBegin( winnerGameObject );
 
+        // Session-wide leaderboard: fanned out so every client increments
+        // their own local Leaderboard copy.
+        ulong winnerSteamId = winner?.Network?.Owner?.SteamId ?? 0UL;
+        if ( winnerSteamId != 0UL )
+        {
+            BroadcastRecordWin( winnerSteamId );
+        }
+
         // Confetti: fan out via RPC so every client populates its own local burst schedule.
         // [Sync] doesn't propagate reliably on this scene-singleton (verified), but
         // [Rpc.Broadcast] bodies do run on clients (same mechanism BroadcastResultsBegin uses).
@@ -503,5 +511,11 @@ public sealed class VictoryManager : Component
         if ( !loadOptions.SetScene( resourcePath ) ) return;
         loadOptions.ShowLoadingScreen = false;
         Game.ActiveScene.Load( loadOptions );
+    }
+
+    [Rpc.Broadcast]
+    private void BroadcastRecordWin( ulong steamId )
+    {
+        Leaderboard.RecordWin( steamId );
     }
 }

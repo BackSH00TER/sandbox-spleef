@@ -59,14 +59,33 @@ public sealed class LobbyNetworkSpawner : Component, Component.INetworkListener
         }
     }
 
-    // Handles the initial bootup and any client joining a live lobby to spawn the player.
+    // Handles the initial bootup and any client joining a live lobby to spawn the player and synchronize the leaderboard.
     // Existing connections on a scene reload are covered by OnStart instead.
     public void OnActive( Connection channel )
     {
         // Guard against double-spawn — OnStart may have already covered this connection.
-        if ( HasPlayerControllerFor( channel ) ) return;
-        Log.Info( $"LobbyNetworkSpawner: OnActive for {channel}, spawning player." );
-        SpawnFor( channel );
+        if ( !HasPlayerControllerFor( channel ) )
+        {
+            Log.Info( $"LobbyNetworkSpawner: OnActive for {channel}, spawning player." );
+            SpawnFor( channel );
+        }
+
+        // Send the current leaderboard just to the new joiner so they aren't stuck at 0/0
+        // for players who racked up wins before they joined.
+        if ( Networking.IsHost )
+        {
+            (ulong[] ids, int[] counts) = Leaderboard.Snapshot();
+            using ( Rpc.FilterInclude( channel ) )
+            {
+                BroadcastLeaderboardSnapshot( ids, counts );
+            }
+        }
+    }
+
+    [Rpc.Broadcast]
+    private void BroadcastLeaderboardSnapshot( ulong[] steamIds, int[] counts )
+    {
+        Leaderboard.ApplySnapshot( steamIds, counts );
     }
 
     // Returns true if the given connection already has a player controller in the scene.
