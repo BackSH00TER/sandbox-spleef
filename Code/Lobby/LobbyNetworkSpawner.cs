@@ -74,18 +74,18 @@ public sealed class LobbyNetworkSpawner : Component, Component.INetworkListener
         // for players who racked up wins before they joined.
         if ( Networking.IsHost )
         {
-            (ulong[] ids, int[] counts) = Leaderboard.Snapshot();
+            (ulong[] ids, int[] counts, ulong previousWinnerSteamId) = Leaderboard.Snapshot();
             using ( Rpc.FilterInclude( channel ) )
             {
-                BroadcastLeaderboardSnapshot( ids, counts );
+                BroadcastLeaderboardSnapshot( ids, counts, previousWinnerSteamId );
             }
         }
     }
 
     [Rpc.Broadcast]
-    private void BroadcastLeaderboardSnapshot( ulong[] steamIds, int[] counts )
+    private void BroadcastLeaderboardSnapshot( ulong[] steamIds, int[] counts, ulong previousWinnerSteamId )
     {
-        Leaderboard.ApplySnapshot( steamIds, counts );
+        Leaderboard.ApplySnapshot( steamIds, counts, previousWinnerSteamId );
     }
 
     // Returns true if the given connection already has a player controller in the scene.

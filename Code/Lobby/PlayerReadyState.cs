@@ -9,6 +9,12 @@ public sealed class PlayerReadyState : Component
 {
     [Property] public ModelRenderer Circle { get; set; }
 
+    /// <summary>
+    /// Overhead crown renderer, shown only on the player who won the most recent round.
+    /// Lives on the player prefab so it persists across the lobby↔game scene swaps.
+    /// </summary>
+    [Property] public ModelRenderer Crown { get; set; }
+
     [Sync, Change( nameof( OnIsReadyChanged ) )]
     public bool IsReady { get; set; }
 
@@ -24,11 +30,22 @@ public sealed class PlayerReadyState : Component
         }
     }
 
+    protected override void OnEnabled()
+    {
+        Leaderboard.Changed += ApplyCrownVisibility;
+    }
+
+    protected override void OnDisabled()
+    {
+        Leaderboard.Changed -= ApplyCrownVisibility;
+    }
+
     protected override void OnStart()
     {
         // Only show the overhead indicator when there's a lobby in this scene.
         ShowIndicator( LobbyManager.Current != null );
         ApplyTint( IsReady );
+        ApplyCrownVisibility();
     }
 
     /// <summary>Show or hide the overhead indicator. The lobby toggles this on while we're in the lobby scene.</summary>
@@ -46,5 +63,16 @@ public sealed class PlayerReadyState : Component
     {
         if ( Circle is null ) return;
         Circle.Tint = ready ? Color.Green : Color.Red;
+    }
+
+    private void ApplyCrownVisibility()
+    {
+        if ( !Crown.IsValid() ) return;
+        ulong steamId = Network.Owner?.SteamId ?? 0UL;
+        bool shouldShow = steamId != 0UL && steamId == Leaderboard.PreviousWinnerSteamId;
+        if ( Crown.Enabled != shouldShow )
+        {
+            Crown.Enabled = shouldShow;
+        }
     }
 }
