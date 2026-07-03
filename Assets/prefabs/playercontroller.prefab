@@ -198,10 +198,10 @@
         "__guid": "9968c7a9-e541-4a7c-900b-2cd7dd15fc34",
         "__enabled": true,
         "Flags": 0,
-        "Circle": {
+        "Crown": {
           "_type": "component",
-          "component_id": "658825d8-b38b-4e01-9100-f4258ecd85d5",
-          "go": "3504a76a-72cc-4c08-9e5c-e69d0e955452",
+          "component_id": "cb244c84-fef8-47c3-81a7-bf626fe299e5",
+          "go": "a639c465-c077-46a3-9409-b7b7c6721f72",
           "component_type": "ModelRenderer"
         },
         "OnComponentDestroy": null,
@@ -254,7 +254,6 @@
         "__guid": "684c2a4a-4474-4ec3-8927-fdc0c4921849",
         "__enabled": true,
         "Flags": 0,
-        "LeapCooldown": 3,
         "OnComponentDestroy": null,
         "OnComponentDisabled": null,
         "OnComponentEnabled": null,
@@ -436,88 +435,7 @@
             "UseAnimGraph": true
           }
         ],
-        "Children": [
-          {
-            "__guid": "0b21aa14-f235-44ef-a31d-ba92a05e347c",
-            "__version": 2,
-            "Flags": 0,
-            "Name": "ReadyState",
-            "Position": "4.89912415,-13.1647863,71.10569",
-            "Rotation": "0,0,0,1",
-            "Scale": "1,1,1",
-            "Tags": "",
-            "Enabled": false,
-            "NetworkMode": 2,
-            "NetworkFlags": 0,
-            "NetworkOrphaned": 0,
-            "NetworkTransmit": true,
-            "OwnerTransfer": 1,
-            "Components": [
-              {
-                "__type": "Sandbox.TextRenderer",
-                "__guid": "978b75a4-6936-4964-8588-f0e62ab0cdcd",
-                "__enabled": true,
-                "Flags": 0,
-                "__version": 2,
-                "Billboard": "None",
-                "BlendMode": "Normal",
-                "FogStrength": 1,
-                "HorizontalAlignment": "Center",
-                "OnComponentDestroy": null,
-                "OnComponentDisabled": null,
-                "OnComponentEnabled": null,
-                "OnComponentFixedUpdate": null,
-                "OnComponentStart": null,
-                "OnComponentUpdate": null,
-                "RenderOptions": {
-                  "GameLayer": true,
-                  "OverlayLayer": false,
-                  "BloomLayer": false,
-                  "AfterUILayer": false
-                },
-                "Scale": 0.3,
-                "TextScope": {
-                  "Text": "Hello! ❤",
-                  "TextColor": "0.45103,0.47149,0.5297,1",
-                  "FontName": "Poppins",
-                  "FontSize": 64,
-                  "FontWeight": 800,
-                  "FontItalic": false,
-                  "FontVariantNumeric": "Normal",
-                  "LineHeight": 1,
-                  "LetterSpacing": 0,
-                  "WordSpacing": 0,
-                  "FilterMode": "Bilinear",
-                  "FontSmooth": "Auto",
-                  "Outline": {
-                    "Enabled": false,
-                    "Size": 4,
-                    "Color": "0,0,1,1"
-                  },
-                  "Shadow": {
-                    "Enabled": false,
-                    "Size": 4,
-                    "Color": "0,0,0,1",
-                    "Offset": "4,4"
-                  },
-                  "OutlineUnder": {
-                    "Enabled": false,
-                    "Size": 4,
-                    "Color": "0,1,0,1"
-                  },
-                  "ShadowUnder": {
-                    "Enabled": false,
-                    "Size": 4,
-                    "Color": "0,0,0,1",
-                    "Offset": "4,4"
-                  }
-                },
-                "VerticalAlignment": "Center"
-              }
-            ],
-            "Children": []
-          }
-        ]
+        "Children": []
       },
       {
         "__guid": "5a280293-c4bf-4326-878f-3b1520b0a94e",
@@ -592,11 +510,11 @@
         "Children": []
       },
       {
-        "__guid": "3504a76a-72cc-4c08-9e5c-e69d0e955452",
+        "__guid": "a639c465-c077-46a3-9409-b7b7c6721f72",
         "__version": 2,
         "Flags": 0,
-        "Name": "ReadyStateIndicator",
-        "Position": "0,0,78.286026",
+        "Name": "WinnerCrown",
+        "Position": "0,0,82.8960114",
         "Rotation": "0,0,0,1",
         "Scale": "0.100000001,0.100000001,0.100000001",
         "Tags": "",
@@ -609,7 +527,7 @@
         "Components": [
           {
             "__type": "Sandbox.ModelRenderer",
-            "__guid": "658825d8-b38b-4e01-9100-f4258ecd85d5",
+            "__guid": "cb244c84-fef8-47c3-81a7-bf626fe299e5",
             "__enabled": true,
             "Flags": 0,
             "BodyGroups": 18446744073709551615,
@@ -618,7 +536,7 @@
             "MaterialGroup": null,
             "MaterialOverride": null,
             "Materials": null,
-            "Model": "models/dev/sphere.vmdl",
+            "Model": "models/lowobjects/crown.vmdl",
             "OnComponentDestroy": null,
             "OnComponentDisabled": null,
             "OnComponentEnabled": null,
@@ -632,7 +550,7 @@
               "AfterUILayer": false
             },
             "RenderType": "Off",
-            "Tint": "1,0,0,1"
+            "Tint": "1,1,1,1"
           }
         ],
         "Children": []
@@ -665,6 +583,8 @@
   "MenuPath": null,
   "MenuIcon": null,
   "DontBreakAsTemplate": false,
-  "__references": [],
+  "__references": [
+    "titanovsky.lo_crown#79189"
+  ],
   "__version": 2
 }
