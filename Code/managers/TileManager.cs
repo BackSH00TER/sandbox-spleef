@@ -4,9 +4,11 @@ public sealed class TileManager : Component
 
 	[Property] public GameObject TilePrefab { get; set; }
 	[Property] public GameObject KillBox { get; set; }
-	[Property] public int Width { get; set; } = 10;
-	[Property] public int Depth { get; set; } = 10;
 	[Property] public int LayerCount { get; set; } = 4;
+
+	/// <summary>Square side length of the topmost layer. Each layer below grows by 1.</summary>
+	[Property] public int TopLayerSize { get; set; } = 8;
+
 	[Property] public float LayerSpacing { get; set; } = 400f;
 	[Property] public float KillBoxDropDistance { get; set; } = 500f;
 	[Property] public float Padding { get; set; } = 0f;
@@ -56,12 +58,13 @@ public sealed class TileManager : Component
 		float cellY = size.y + Padding;
 		float cellZ = size.z + LayerSpacing;
 
-		var offset = Centered
-			? new Vector3( -(Width - 1) * cellX * 0.5f, -(Depth - 1) * cellY * 0.5f, 0f )
-			: Vector3.Zero;
-
 		for ( int layer = 0; layer < LayerCount; layer++ )
 		{
+			int layerSize = TopLayerSize + layer;
+			Vector3 layerOffset = Centered
+				? new Vector3( -(layerSize - 1) * cellX * 0.5f, -(layerSize - 1) * cellY * 0.5f, 0f )
+				: Vector3.Zero;
+
 			// Each layer is parented under its own child GameObject for tidiness in the scene tree.
 			// It must be NetworkSpawn'd so that when we parent network-spawned tiles under it,
 			// clients can resolve the parent reference and the tiles actually appear.
@@ -71,12 +74,13 @@ public sealed class TileManager : Component
 			layerGameObject.LocalPosition = new Vector3( 0f, 0f, -layer * cellZ );
 			layerGameObject.NetworkSpawn();
 
-			for ( int x = 0; x < Width; x++ )
+			for ( int x = 0; x < layerSize; x++ )
 			{
-				for ( int y = 0; y < Depth; y++ )
+				for ( int y = 0; y < layerSize; y++ )
 				{
-					var localPos = offset + new Vector3( x * cellX, y * cellY, 0f );
-					AvailableSpawnLocations.Add( localPos );
+					var localPos = layerOffset + new Vector3( x * cellX, y * cellY, 0f );
+					// Only the top layer contributes player spawn positions.
+					if ( layer == 0 ) AvailableSpawnLocations.Add( localPos );
 					var tile = SpawnTile( localPos, $"Tile_{x}_{y}", parent: layerGameObject );
 
 					if ( TintLayers )

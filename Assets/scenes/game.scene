@@ -397,7 +397,6 @@
           "__enabled": true,
           "Flags": 0,
           "Centered": true,
-          "Depth": 10,
           "KillBox": {
             "_type": "gameobject",
             "go": "65b04251-72ad-424e-8506-89aa08092e7c"
@@ -425,7 +424,7 @@
             "prefab": "prefabs/tile.prefab"
           },
           "TintLayers": true,
-          "Width": 10
+          "TopLayerSize": 8
         }
       ],
       "Children": []
