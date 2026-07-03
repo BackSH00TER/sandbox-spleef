@@ -45,9 +45,11 @@ public sealed class PlayerReadyState : Component
         if ( !Crown.IsValid() ) return;
         ulong steamId = Network.Owner?.SteamId ?? 0UL;
         bool shouldShow = steamId != 0UL && steamId == Leaderboard.PreviousWinnerSteamId;
-        if ( Crown.Enabled != shouldShow )
+
+        GameObject crownGameObject = Crown.GameObject;
+        if ( crownGameObject.Enabled != shouldShow )
         {
-            Crown.Enabled = shouldShow;
+            crownGameObject.Enabled = shouldShow;
         }
     }
 }

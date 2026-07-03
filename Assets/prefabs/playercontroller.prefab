@@ -518,7 +518,7 @@
         "Rotation": "0,0,0,1",
         "Scale": "0.100000001,0.100000001,0.100000001",
         "Tags": "",
-        "Enabled": true,
+        "Enabled": false,
         "NetworkMode": 2,
         "NetworkFlags": 0,
         "NetworkOrphaned": 0,
@@ -549,7 +549,7 @@
               "BloomLayer": false,
               "AfterUILayer": false
             },
-            "RenderType": "Off",
+            "RenderType": "On",
             "Tint": "1,1,1,1"
           }
         ],
