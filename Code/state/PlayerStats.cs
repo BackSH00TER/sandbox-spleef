@@ -12,7 +12,7 @@ public static class PlayerStats
     private static RealTimeSince _sinceMatchStart;
     private static bool _isMatchInProgress;
 
-public static void StartMatchTimer()
+    public static void StartMatchTimer()
     {
         _sinceMatchStart = 0f;
         _isMatchInProgress = true;
@@ -20,7 +20,7 @@ public static void StartMatchTimer()
 
     public static void RecordWin()
     {
-        Sandbox.Services.Stats.Increment( "wins", 1 );
+        Sandbox.Services.Stats.Increment( "matches_won", 1 );
         FinishMatch();
     }
 
