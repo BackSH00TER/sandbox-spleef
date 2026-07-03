@@ -72,6 +72,7 @@ public sealed class GameManager : Component, Component.INetworkListener
 			CountdownActive = false;
 			if ( !Debug_DisableGridPhysics ) TileManager.ActivateGrid();
 			PlayerManager.EnablePlayersInput();
+			BroadcastMatchStart();
 		}
 	}
 
@@ -109,6 +110,7 @@ public sealed class GameManager : Component, Component.INetworkListener
 			using ( Rpc.FilterInclude( ownerConnection ) )
 			{
 				EnterSpectatorAfterElimination();
+				NotifyLocalElimination();
 			}
 		}
 
@@ -141,6 +143,20 @@ public sealed class GameManager : Component, Component.INetworkListener
 	private void EnterSpectatorAfterElimination()
 	{
 		SpectatorMode.Current?.Activate();
+	}
+
+	// Only the eliminated player's client should record their own survival stat.
+	[Rpc.Broadcast]
+	private void NotifyLocalElimination()
+	{
+		PlayerStats.RecordElimination();
+	}
+
+	// Fans out to every client so each one starts its local match timer.
+	[Rpc.Broadcast]
+	private void BroadcastMatchStart()
+	{
+		PlayerStats.StartMatchTimer();
 	}
 
 	/// <summary>
