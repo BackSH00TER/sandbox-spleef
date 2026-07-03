@@ -517,5 +517,9 @@ public sealed class VictoryManager : Component
     private void BroadcastRecordWin( ulong steamId )
     {
         Leaderboard.RecordWin( steamId );
+        if ( Connection.Local != null && Connection.Local.SteamId == steamId )
+        {
+            PlayerStats.RecordWin();
+        }
     }
 }
