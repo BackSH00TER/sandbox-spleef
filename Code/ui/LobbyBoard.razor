@@ -21,8 +21,7 @@
             <div class="grid">
                 @foreach (PlayerReadyState player in Scene.GetAllComponents<PlayerReadyState>())
                 {
-                    <div class="cell">
-                        <div class="dot @(player.IsReady ? "ready" : "notready")"></div>
+                    <div class="cell @(player.IsReady ? "ready" : "notready")">
                         <img class="avatar" src="avatar:@(player.Network.Owner.SteamId)" />
                         <div class="name">@player.DisplayName</div>
                         <div class="wins" title="Wins">
