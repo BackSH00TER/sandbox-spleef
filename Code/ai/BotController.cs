@@ -200,6 +200,11 @@ public sealed class BotController : Component
 	// no attempt at all.
 	private void LaunchAt( float distanceXY )
 	{
+		// No mid-air launches. Once committed to a trajectory, the bot has to ride
+		// it out. Prevents chain-jumping / infinite hang time when PickTarget or
+		// LaunchIfEdgeAhead re-triggers mid-fall.
+		if ( !_controller.IsOnGround ) return;
+
 		bool leapReady = IsLeapReady();
 
 		if ( distanceXY <= JumpReach )
