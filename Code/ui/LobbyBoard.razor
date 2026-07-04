@@ -22,7 +22,16 @@
                 @foreach (PlayerReadyState player in Scene.GetAllComponents<PlayerReadyState>())
                 {
                     <div class="cell @(player.IsReady ? "ready" : "notready")">
-                        <img class="avatar" src="avatar:@(player.Network.Owner.SteamId)" />
+                        @if (player.IsBot())
+                        {
+                            <div class="avatar bot-avatar" style="background-color: @(BotColor(player.DisplayName));">
+                                @(BotInitial(player.DisplayName))
+                            </div>
+                        }
+                        else
+                        {
+                            <img class="avatar" src="avatar:@(player.Network.Owner.SteamId)" />
+                        }
                         <div class="name">@player.DisplayName</div>
                         <div class="wins" title="Wins">
                             <div class="trophy">🏆</div>
@@ -44,6 +53,16 @@
             if (mgr is null || !mgr.IsLaunching) return 0;
             return System.Math.Max(1, (int)System.MathF.Ceiling(mgr.LaunchSecondsRemaining));
         }
+    }
+
+    private static string BotInitial(string name) =>
+        string.IsNullOrEmpty(name) ? "?" : name.Substring(0, 1).ToUpper();
+
+    // Stable per-name HSL so each bot keeps the same badge color across ticks.
+    private static string BotColor(string seed)
+    {
+        int hue = System.Math.Abs(seed.GetHashCode()) % 360;
+        return $"hsl({hue}, 55%, 45%)";
     }
 
     protected override int BuildHash()

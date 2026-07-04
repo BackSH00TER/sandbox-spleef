@@ -68,6 +68,14 @@ LobbyBoard {
             background-color: rgba(255, 255, 255, 0.1);
         }
 
+        .bot-avatar {
+            justify-content: center;
+            align-items: center;
+            font-size: 64px;
+            font-weight: 700;
+            color: white;
+        }
+
         .wins {
             flex-direction: row;
             align-items: center;
