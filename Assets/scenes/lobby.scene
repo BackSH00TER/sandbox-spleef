@@ -2092,7 +2092,7 @@
       "__version": 2,
       "Flags": 0,
       "Name": "AddBotsButton",
-      "Position": "5.27918625,-306.612396,39.382679",
+      "Position": "5.27918625,-378.557922,89.6782761",
       "Rotation": "0,0,0,1",
       "Scale": "1,1,1",
       "Tags": "",
@@ -2109,8 +2109,8 @@
           "__version": 2,
           "Flags": 0,
           "Name": "AddButton",
-          "Position": "53.9166107,0,0",
-          "Rotation": "0,0,0,1",
+          "Position": "53.9166107,14.9141846,0",
+          "Rotation": "-0.707106769,-0,0,0.707106769",
           "Scale": "1,1,1",
           "Tags": "",
           "Enabled": true,
@@ -2131,7 +2131,7 @@
               "MaterialGroup": null,
               "MaterialOverride": null,
               "Materials": null,
-              "Model": "models/dev/box.vmdl",
+              "Model": "models/lowobjects/symbol_+.vmdl",
               "OnComponentDestroy": null,
               "OnComponentDisabled": null,
               "OnComponentEnabled": null,
@@ -2179,13 +2179,21 @@
               "__enabled": true,
               "Flags": 0,
               "Delta": 1,
+              "InteractRadius": 10,
               "MaxInteractDistance": 250,
+              "Model": {
+                "_type": "gameobject",
+                "go": "e4ef9b40-1b94-4851-ba6a-25a99a0af0e6"
+              },
               "OnComponentDestroy": null,
               "OnComponentDisabled": null,
               "OnComponentEnabled": null,
               "OnComponentFixedUpdate": null,
               "OnComponentStart": null,
-              "OnComponentUpdate": null
+              "OnComponentUpdate": null,
+              "PressHoldDuration": 0.12,
+              "PressOffset": "0,-3,0",
+              "PressSpeed": 30
             }
           ],
           "Children": []
@@ -2195,7 +2203,7 @@
           "__version": 2,
           "Flags": 0,
           "Name": "RemoveButton",
-          "Position": "-53.3824844,0,0",
+          "Position": "-53.3824844,22,0",
           "Rotation": "0,0,0,1",
           "Scale": "1,1,1",
           "Tags": "",
@@ -2217,7 +2225,7 @@
               "MaterialGroup": null,
               "MaterialOverride": null,
               "Materials": null,
-              "Model": "models/dev/box.vmdl",
+              "Model": "models/lowobjects/symbol_-.vmdl",
               "OnComponentDestroy": null,
               "OnComponentDisabled": null,
               "OnComponentEnabled": null,
@@ -2265,13 +2273,21 @@
               "__enabled": true,
               "Flags": 0,
               "Delta": -1,
+              "InteractRadius": 10,
               "MaxInteractDistance": 250,
+              "Model": {
+                "_type": "gameobject",
+                "go": "ba378a53-deb2-4497-8524-76a4cb0dbd32"
+              },
               "OnComponentDestroy": null,
               "OnComponentDisabled": null,
               "OnComponentEnabled": null,
               "OnComponentFixedUpdate": null,
               "OnComponentStart": null,
-              "OnComponentUpdate": null
+              "OnComponentUpdate": null,
+              "PressHoldDuration": 0.12,
+              "PressOffset": "0,-3,0",
+              "PressSpeed": 30
             }
           ],
           "Children": []
@@ -2334,7 +2350,7 @@
                     "AfterUILayer": false
                   },
                   "RenderType": "On",
-                  "Tint": "1,1,1,1"
+                  "Tint": "0.09804,0.09804,0.09804,1"
                 }
               ],
               "Children": []
@@ -2395,6 +2411,52 @@
               "Children": []
             }
           ]
+        },
+        {
+          "__guid": "78afdfa4-1bc1-43c9-8f75-73747bda4c20",
+          "__version": 2,
+          "Flags": 0,
+          "Name": "ButtonBox",
+          "Position": "0,-8.58959961,0",
+          "Rotation": "0,0,0,1",
+          "Scale": "3.20000005,1.20000005,1.20000005",
+          "Tags": "",
+          "Enabled": true,
+          "NetworkMode": 2,
+          "NetworkFlags": 0,
+          "NetworkOrphaned": 0,
+          "NetworkTransmit": true,
+          "OwnerTransfer": 1,
+          "Components": [
+            {
+              "__type": "Sandbox.ModelRenderer",
+              "__guid": "73ad18cf-6c43-42d2-85da-fbbcfa69d269",
+              "__enabled": true,
+              "Flags": 0,
+              "BodyGroups": 18446744073709551615,
+              "CreateAttachments": false,
+              "LodOverride": null,
+              "MaterialGroup": null,
+              "MaterialOverride": null,
+              "Materials": null,
+              "Model": "models/dev/box.vmdl",
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null,
+              "RenderOptions": {
+                "GameLayer": true,
+                "OverlayLayer": false,
+                "BloomLayer": false,
+                "AfterUILayer": false
+              },
+              "RenderType": "On",
+              "Tint": "0.09804,0.09804,0.09804,1"
+            }
+          ],
+          "Children": []
         }
       ]
     }
@@ -2434,6 +2496,9 @@
   "ResourceVersion": 3,
   "Title": null,
   "Description": null,
-  "__references": [],
+  "__references": [
+    "titanovsky.lo_symbol_minus#79171",
+    "titanovsky.lo_symbol_plus#79173"
+  ],
   "__version": 3
 }
