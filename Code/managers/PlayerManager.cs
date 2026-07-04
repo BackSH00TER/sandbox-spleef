@@ -30,7 +30,7 @@ public sealed class PlayerManager : Component, Component.INetworkListener
 			for ( int i = 0; i < BotConfig.BotCount; i++ )
 			{
 				Vector3 position = TakeSpawnPosition( AvailableSpawnPositions );
-				BotDirector.SpawnAt( PlayerPrefab, new Transform( position, Rotation.Identity, Vector3.One ) );
+				BotDirector.SpawnAt( PlayerPrefab, new Transform( position, Rotation.Identity, Vector3.One ), i );
 			}
 		}
 	}
@@ -66,7 +66,7 @@ public sealed class PlayerManager : Component, Component.INetworkListener
 		{
 			// Bots must stay input-suppressed — otherwise the host's live input
 			// drives every bot's PlayerController.
-			if ( pc.GetComponent<BotBrain>() != null ) continue;
+			if ( pc.IsBot() ) continue;
 			pc.UseInputControls = true;
 		}
 	}

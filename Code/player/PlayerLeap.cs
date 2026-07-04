@@ -22,7 +22,7 @@ public sealed class PlayerLeap : Component, PlayerController.IEvents
 		}
 		// Bots don't get the on-screen control hint UI — host owns them but is
 		// also the local player, so without this guard each bot spawns a duplicate HUD.
-		if ( GetComponent<BotBrain>() != null )
+		if ( this.IsBot() )
 		{
 			return;
 		}
@@ -37,7 +37,7 @@ public sealed class PlayerLeap : Component, PlayerController.IEvents
 		}
 		// Bots aren't driven by real input — skip so the host's attack1 press
 		// doesn't make every bot leap in unison.
-		if ( GetComponent<BotBrain>() != null )
+		if ( this.IsBot() )
 		{
 			return;
 		}
@@ -107,7 +107,7 @@ public sealed class PlayerLeap : Component, PlayerController.IEvents
 
 		TargetRenderer.Set( "special_movement_states", 0 );
 		// Bots should stay input-suppressed forever; only restore input for real players.
-		if ( GetComponent<BotBrain>() == null )
+		if ( !this.IsBot() )
 		{
 			TargetController.UseInputControls = true;
 		}

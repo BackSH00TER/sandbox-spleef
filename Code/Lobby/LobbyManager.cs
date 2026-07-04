@@ -96,7 +96,7 @@ public sealed class LobbyManager : Component
 		var allReadyStates = Scene.GetAllComponents<PlayerReadyState>().ToList();
 		// Bots don't count — they're always ready. Requiring the real player(s) to
 		// ready-up is what actually gates the launch.
-		var realPlayerStates = allReadyStates.Where( s => s.GetComponent<BotBrain>() == null ).ToList();
+		var realPlayerStates = allReadyStates.Where( s => !s.IsBot() ).ToList();
 		int readyCount = realPlayerStates.Count( s => s.IsReady );
 		bool hasMajority = realPlayerStates.Count >= MinPlayers
 			&& readyCount >= realPlayerStates.Count * percentReadyRequired;

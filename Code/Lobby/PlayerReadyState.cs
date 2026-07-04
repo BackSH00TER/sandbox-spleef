@@ -13,15 +13,7 @@ public sealed class PlayerReadyState : Component
 
     [Sync] public bool IsReady { get; set; }
 
-    public string DisplayName
-    {
-        get
-        {
-            BotBrain bot = GetComponent<BotBrain>();
-            if ( bot != null ) return bot.BotName;
-            return Network.Owner?.DisplayName ?? "Unknown";
-        }
-    }
+    public string DisplayName => GameObject.GetPlayerName();
 
     // Bots don't have a real SteamId (they're host-owned, so Network.Owner.SteamId is the
     // host's). Use BotBrain.LeaderboardId as their synthetic identity for leaderboard/crown

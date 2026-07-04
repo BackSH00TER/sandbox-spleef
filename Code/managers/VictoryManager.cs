@@ -155,7 +155,6 @@ public sealed class VictoryManager : Component
         // Session-wide leaderboard: fanned out so every client increments
         // their own local Leaderboard copy. Bots use PlayerReadyState.LeaderboardId
         // (a synthetic id) so wins/crowns are tracked per-bot and don't smear onto the host.
-        bool winnerIsBot = winner?.GetComponent<BotBrain>() != null;
         ulong winnerLeaderboardId = winner?.GetComponent<PlayerReadyState>()?.LeaderboardId ?? 0UL;
         if ( winnerLeaderboardId != 0UL )
         {
@@ -174,9 +173,7 @@ public sealed class VictoryManager : Component
             }
         }
 
-        string winnerName = winnerIsBot
-            ? (winner?.GetComponent<BotBrain>()?.BotName ?? "Bot")
-            : (winner?.Network?.Owner?.DisplayName ?? "Unknown");
+        string winnerName = winner.GetPlayerName();
         Log.Info( $"{winnerName} won! Showing results for {ResultsDuration}s." );
     }
 

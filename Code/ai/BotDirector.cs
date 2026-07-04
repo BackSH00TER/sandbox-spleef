@@ -35,7 +35,7 @@ public sealed class BotDirector : Component
 
 		while ( existing.Count < desired )
 		{
-			BotBrain spawned = SpawnBot();
+			BotBrain spawned = SpawnBot( existing.Count );
 			if ( spawned != null )
 			{
 				existing.Add( spawned );
@@ -47,20 +47,22 @@ public sealed class BotDirector : Component
 		}
 	}
 
-	private BotBrain SpawnBot()
+	private BotBrain SpawnBot( int slot )
 	{
 		// Use the lobby's normal spawn distribution so bots mix in with real players.
 		LobbyNetworkSpawner spawner = Scene.GetAllComponents<LobbyNetworkSpawner>().FirstOrDefault();
 		Transform spawnTransform = spawner != null ? spawner.FindSpawnLocation() : WorldTransform;
-		return SpawnAt( BotPrefab, spawnTransform );
+		return SpawnAt( BotPrefab, spawnTransform, slot );
 	}
 
 	/// <summary>
 	/// Host-only. Clone the given prefab at the given transform, tag it as a bot,
 	/// and network-spawn it host-owned. Used by both this director (lobby scene)
 	/// and <see cref="PlayerManager"/> (game scene, spawns at tile positions).
+	/// The <paramref name="slot"/> keys into <see cref="BotNames.ForSlot"/> so the
+	/// same bot slot keeps its name across scene transitions.
 	/// </summary>
-	public static BotBrain SpawnAt( GameObject prefab, Transform transform )
+	public static BotBrain SpawnAt( GameObject prefab, Transform transform, int slot )
 	{
 		if ( !Networking.IsHost ) return null;
 		if ( !prefab.IsValid() )
@@ -69,7 +71,7 @@ public sealed class BotDirector : Component
 			return null;
 		}
 
-		string name = BotNames.Random();
+		string name = BotNames.ForSlot( slot );
 		GameObject bot = prefab.Clone( transform.WithScale( 1f ), name: $"Bot - {name}" );
 
 		PlayerController pc = bot.GetComponent<PlayerController>();
@@ -84,7 +86,7 @@ public sealed class BotDirector : Component
 		// (future) decision logic on the owner.
 		bot.NetworkSpawn();
 
-		brain.Initialize( name );
+		brain.Initialize( name, slot );
 		return brain;
 	}
 }

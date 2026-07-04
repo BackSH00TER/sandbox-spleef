@@ -107,7 +107,7 @@ public sealed class LobbyNetworkSpawner : Component, Component.INetworkListener
             .Any( pc => pc.IsValid()
                 && pc.Network.Active
                 && pc.Network.OwnerId == client.Id
-                && pc.GetComponent<BotBrain>() == null );
+                && !pc.IsBot() );
     }
 
     // Spawn a player for the given connection. The host owns this logic, and the engine
@@ -122,7 +122,7 @@ public sealed class LobbyNetworkSpawner : Component, Component.INetworkListener
     }
 
     // Pick a random spawn point and jitter it inside SpawnAreaSize.
-    private Transform FindSpawnLocation()
+    public Transform FindSpawnLocation()
     {
         SpawnPoint[] points = Scene.GetAllComponents<SpawnPoint>().ToArray();
         if ( points.Length == 0 ) return WorldTransform;

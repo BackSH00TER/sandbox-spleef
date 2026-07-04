@@ -18,6 +18,11 @@ public sealed class BotBrain : Component
 	// that would credit the host with every bot's win and put the crown on every bot.
 	[Sync] public ulong LeaderboardId { get; set; }
 
+	// Stable slot index (0..BotCount-1) used to key persistent name / outfit lookups
+	// (see BotNames.ForSlot, BotOutfits.ApplyForSlot) so bot #N keeps its identity
+	// across lobby ↔ game scene transitions.
+	[Sync] public int Slot { get; set; }
+
 	/// <summary>How often the bot re-picks a target tile (also fires on arrival).</summary>
 	[Property] public float RetargetInterval { get; set; } = 1.5f;
 
@@ -28,7 +33,7 @@ public sealed class BotBrain : Component
 	[Property] public float WalkReach { get; set; } = 180f;
 
 	/// <summary>Max XY distance to a tile the bot will attempt to reach via a jump.</summary>
-	[Property] public float JumpReach { get; set; } = 280f;
+	[Property] public float JumpReach { get; set; } = 220f;
 
 	/// <summary>Max XY distance to a tile the bot will attempt to reach via a dive (leap).</summary>
 	[Property] public float DiveReach { get; set; } = 550f;
@@ -45,9 +50,10 @@ public sealed class BotBrain : Component
 	private RealTimeSince _sinceRetarget;
 
 	/// <summary>Host-only. Configure a freshly spawned bot.</summary>
-	public void Initialize( string name )
+	public void Initialize( string name, int slot )
 	{
 		BotName = name;
+		Slot = slot;
 		LeaderboardId = ((ulong)(uint)Guid.NewGuid().GetHashCode()) | 0x1000_0000_0000_0000UL;
 
 		// Bots are always ready so they don't gate the launch countdown.

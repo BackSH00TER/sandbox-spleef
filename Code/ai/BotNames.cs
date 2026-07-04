@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
-/// Random display name pool for AI bots. Names are chosen at spawn and
-/// stored on the bot's <see cref="BotBrain"/>.
+/// Persistent per-slot name assignment for AI bots. The first name a bot is
+/// given for slot N is cached statically, so the same slot keeps its name across
+/// lobby ↔ game scene transitions (bots are respawned each transition and would
+/// otherwise re-roll their name). Reset on host restart.
 /// </summary>
 public static class BotNames
 {
-	private static readonly string[] _names = new[]
+	private static readonly string[] _pool = new[]
 	{
 		"Waffle", "Pixel", "Turbo", "Biscuit", "Zap",
 		"Noodle", "Bumper", "Sprocket", "Wobble", "Fizz",
@@ -14,13 +18,23 @@ public static class BotNames
 		"Gadget", "Crumb", "Squish", "Boop", "Tumble",
 	};
 
-	public static string Random( Random rng )
-	{
-		return _names[rng.Next( _names.Length )];
-	}
+	private static readonly List<string> _assigned = new();
 
-	public static string Random()
+	/// <summary>
+	/// Returns the name for the given bot slot (0-based). First access to a slot
+	/// picks a fresh name from the pool (avoiding duplicates while possible);
+	/// subsequent accesses return the same name for the session.
+	/// </summary>
+	public static string ForSlot( int slot )
 	{
-		return _names[Sandbox.Game.Random.Int( _names.Length - 1 )];
+		while ( _assigned.Count <= slot )
+		{
+			List<string> remaining = _pool.Except( _assigned ).ToList();
+			string next = remaining.Count > 0
+				? remaining[Sandbox.Game.Random.Int( remaining.Count - 1 )]
+				: _pool[Sandbox.Game.Random.Int( _pool.Length - 1 )];
+			_assigned.Add( next );
+		}
+		return _assigned[slot];
 	}
 }

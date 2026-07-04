@@ -29,7 +29,7 @@ public sealed class LobbyAIToggle : Component, Component.ITriggerListener
 		if ( !root.IsValid() ) return false;
 		if ( root.GetComponent<PlayerController>() == null ) return false;
 		// Ignore bots stepping in — they shouldn't self-toggle.
-		if ( root.GetComponent<BotBrain>() != null ) return false;
+		if ( root.IsBot() ) return false;
 		return true;
 	}
 

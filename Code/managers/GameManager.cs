@@ -92,14 +92,10 @@ public sealed class GameManager : Component, Component.INetworkListener
 		if ( player == null || !player.IsValid() ) return;
 
 		// Bots are host-owned; sending the elimination filter to the host would put
-		// the host into spectator mode every time a bot dies. Look up the marker via
-		// GameObject.Components.Get so we're not relying on the component-side alias.
-		BotBrain bot = player.GameObject.Components.Get<BotBrain>();
-		bool isBot = bot != null;
+		// the host into spectator mode every time a bot dies.
+		bool isBot = player.IsBot();
 
-		string name = isBot
-			? bot.BotName
-			: (player.Network?.Owner?.DisplayName ?? player.GameObject.Name);
+		string name = player.GetPlayerName();
 
 		// Destroy hasn't propagated yet, so filter out the eliminated player explicitly.
 		List<PlayerController> remaining = Scene.GetAllComponents<PlayerController>()
