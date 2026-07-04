@@ -33,6 +33,9 @@ public sealed class Tile : Component, Component.ITriggerListener
 	[Sync] private bool _triggered { get; set; } = false;
 	[Sync] private bool _falling { get; set; } = false;
 
+	/// <summary>True while the tile is a valid landing spot (not counting down to break, not falling).</summary>
+	public bool IsSafe => !_triggered && !_falling;
+
 	// The per-layer color the host assigns at grid build time. Synced so non-host
 	// clients see the layer colors instead of the prefab default. Default is the zero
 	// color (alpha 0); we use that as the "not assigned" sentinel.

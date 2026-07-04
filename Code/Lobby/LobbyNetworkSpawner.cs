@@ -97,11 +97,17 @@ public sealed class LobbyNetworkSpawner : Component, Component.INetworkListener
         }
     }
 
-    // Returns true if the given connection already has a player controller in the scene.
+    // Returns true if the given connection already has a REAL player controller in
+    // the scene. Bots are host-owned, so without the BotBrain exclusion the host would
+    // appear to already have a player as soon as any bot spawned — and their real
+    // player would never get created.
     private bool HasPlayerControllerFor( Connection client )
     {
         return Scene.GetAllComponents<PlayerController>()
-            .Any( pc => pc.IsValid() && pc.Network.Active && pc.Network.OwnerId == client.Id );
+            .Any( pc => pc.IsValid()
+                && pc.Network.Active
+                && pc.Network.OwnerId == client.Id
+                && pc.GetComponent<BotBrain>() == null );
     }
 
     // Spawn a player for the given connection. The host owns this logic, and the engine

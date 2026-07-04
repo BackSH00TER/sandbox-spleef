@@ -153,11 +153,13 @@ public sealed class VictoryManager : Component
         BroadcastResultsBegin( winnerGameObject );
 
         // Session-wide leaderboard: fanned out so every client increments
-        // their own local Leaderboard copy.
-        ulong winnerSteamId = winner?.Network?.Owner?.SteamId ?? 0UL;
-        if ( winnerSteamId != 0UL )
+        // their own local Leaderboard copy. Bots use PlayerReadyState.LeaderboardId
+        // (a synthetic id) so wins/crowns are tracked per-bot and don't smear onto the host.
+        bool winnerIsBot = winner?.GetComponent<BotBrain>() != null;
+        ulong winnerLeaderboardId = winner?.GetComponent<PlayerReadyState>()?.LeaderboardId ?? 0UL;
+        if ( winnerLeaderboardId != 0UL )
         {
-            BroadcastRecordWin( winnerSteamId );
+            BroadcastRecordWin( winnerLeaderboardId );
         }
 
         // Confetti: fan out via RPC so every client populates its own local burst schedule.
@@ -172,7 +174,9 @@ public sealed class VictoryManager : Component
             }
         }
 
-        string winnerName = winner?.Network?.Owner?.DisplayName ?? "Unknown";
+        string winnerName = winnerIsBot
+            ? (winner?.GetComponent<BotBrain>()?.BotName ?? "Bot")
+            : (winner?.Network?.Owner?.DisplayName ?? "Unknown");
         Log.Info( $"{winnerName} won! Showing results for {ResultsDuration}s." );
     }
 

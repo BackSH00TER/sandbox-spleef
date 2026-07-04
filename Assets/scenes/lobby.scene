@@ -162,6 +162,23 @@
           "OnComponentFixedUpdate": null,
           "OnComponentStart": null,
           "OnComponentUpdate": null
+        },
+        {
+          "__type": "BotDirector",
+          "__guid": "2fcf48bc-08d0-4f35-aa0f-d66929e33b48",
+          "__enabled": true,
+          "Flags": 0,
+          "BotPrefab": {
+            "_type": "gameobject",
+            "prefab": "prefabs/playercontroller.prefab"
+          },
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "SpawnAnchor": null
         }
       ],
       "Children": []
@@ -311,6 +328,110 @@
             {
               "__type": "Sandbox.ModelRenderer",
               "__guid": "91848450-8c14-4f55-988e-46fb6c1337d9",
+              "__enabled": true,
+              "Flags": 0,
+              "BodyGroups": 18446744073709551615,
+              "CreateAttachments": false,
+              "LodOverride": null,
+              "MaterialGroup": null,
+              "MaterialOverride": null,
+              "Materials": null,
+              "Model": "models/ready_area/ready_area.vmdl",
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null,
+              "RenderOptions": {
+                "GameLayer": true,
+                "OverlayLayer": false,
+                "BloomLayer": false,
+                "AfterUILayer": false
+              },
+              "RenderType": "Off",
+              "Tint": "1,0.6,0,1"
+            }
+          ],
+          "Children": []
+        }
+      ]
+    },
+    {
+      "__guid": "e545210a-bb08-4bab-948c-de30131bb504",
+      "__version": 2,
+      "Flags": 0,
+      "Name": "BotToggleArea",
+      "Position": "-87.2817993,-331.003967,4.03047228",
+      "Rotation": "0,0,0.707106769,0.707106769",
+      "Scale": "0.200000003,0.200000003,1",
+      "Tags": "",
+      "Enabled": true,
+      "NetworkMode": 2,
+      "NetworkFlags": 0,
+      "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
+      "OwnerTransfer": 1,
+      "Components": [
+        {
+          "__type": "Sandbox.BoxCollider",
+          "__guid": "b9c57ed8-6a18-4082-8126-72be81ee0e34",
+          "__enabled": true,
+          "Flags": 0,
+          "Center": "0,0,-11.489995",
+          "ColliderFlags": 0,
+          "Elasticity": null,
+          "Friction": null,
+          "IsTrigger": true,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "OnObjectTriggerEnter": null,
+          "OnObjectTriggerExit": null,
+          "OnTriggerEnter": null,
+          "OnTriggerExit": null,
+          "RollingResistance": null,
+          "Scale": "200,800,700",
+          "Static": false,
+          "Surface": null,
+          "SurfaceVelocity": "0,0,0"
+        },
+        {
+          "__type": "LobbyAIToggle",
+          "__guid": "20d8d947-77d1-4170-9aba-494821351180",
+          "__enabled": true,
+          "Flags": 0,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null
+        }
+      ],
+      "Children": [
+        {
+          "__guid": "a2949e18-959d-4309-b4f1-1578be5d1bf4",
+          "__version": 2,
+          "Flags": 0,
+          "Name": "Model",
+          "Position": "0,0,0",
+          "Rotation": "0,0,0,1",
+          "Scale": "2,7.27999687,1",
+          "Tags": "",
+          "Enabled": true,
+          "NetworkMode": 2,
+          "NetworkFlags": 0,
+          "NetworkOrphaned": 0,
+          "NetworkTransmit": true,
+          "OwnerTransfer": 1,
+          "Components": [
+            {
+              "__type": "Sandbox.ModelRenderer",
+              "__guid": "c2900cdb-eeaa-4811-9c64-13a2f0b54dbf",
               "__enabled": true,
               "Flags": 0,
               "BodyGroups": 18446744073709551615,

@@ -93,12 +93,13 @@ public sealed class LobbyManager : Component
 		if ( !Networking.IsHost ) return;
 		if ( _hasLaunched ) return;
 
-		var playerReadyStates = Scene.GetAllComponents<PlayerReadyState>().ToList();
-		int readyCount = playerReadyStates.Count( s => s.IsReady );
-		// MinPlayers gate also avoids the 0/0 case after a scene swap where no
-		// PlayerReadyState components exist yet and the majority check would pass.
-		bool hasMajority = playerReadyStates.Count >= MinPlayers
-			&& readyCount >= playerReadyStates.Count * percentReadyRequired;
+		var allReadyStates = Scene.GetAllComponents<PlayerReadyState>().ToList();
+		// Bots don't count — they're always ready. Requiring the real player(s) to
+		// ready-up is what actually gates the launch.
+		var realPlayerStates = allReadyStates.Where( s => s.GetComponent<BotBrain>() == null ).ToList();
+		int readyCount = realPlayerStates.Count( s => s.IsReady );
+		bool hasMajority = realPlayerStates.Count >= MinPlayers
+			&& readyCount >= realPlayerStates.Count * percentReadyRequired;
 
 		if ( hasMajority && !IsLaunching )
 		{
