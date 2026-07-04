@@ -1,5 +1,6 @@
 using System.Linq;
 using Sandbox;
+using Sandbox.Rendering;
 
 /// <summary>
 /// Lobby interact button. Look at it and press Use to bump
@@ -14,6 +15,7 @@ public sealed class LobbyBotButton : Component
 
     /// <summary>Radius of the interact ray. Bigger = more forgiving aim, but neighbouring objects steal hits sooner.</summary>
     [Property] public float InteractRadius { get; set; } = 10f;
+    [Property, InputAction] public string InteractAction { get; set; } = "Use";
 
     /// <summary>Optional visual child that gets pressed inward on click. Must be a child so moving it doesn't move the collider.</summary>
     [Property, Group( "Press Animation" )] public GameObject Model { get; set; }
@@ -41,8 +43,6 @@ public sealed class LobbyBotButton : Component
     {
         UpdatePressAnimation();
 
-        if ( !Input.Pressed( "Use" ) ) return;
-
         CameraComponent camera = Scene.Camera;
         if ( camera == null )
         {
@@ -53,7 +53,7 @@ public sealed class LobbyBotButton : Component
         Vector3 from = camera.WorldPosition;
         Vector3 to = from + camera.WorldRotation.Forward * MaxInteractDistance;
 
-        // Raycast to see if player hits the button, ignore the player collider
+        // Raycast to see if player is looking at the button, ignore the player collider
         // Uses a radius to make the aiming a bit more forgiving
         SceneTraceResult result = Scene.Trace.Ray( from, to )
             .Size( InteractRadius )
@@ -61,18 +61,69 @@ public sealed class LobbyBotButton : Component
             .Run();
         if ( !result.Hit )
         {
-            Log.Info( $"[LobbyBotButton {GameObject.Name}] Use pressed but ray missed. from={from} dir={camera.WorldRotation.Forward}" );
+            // Adding HUD works as visual debugging
+            // This would log every frame we're not looking at button
+            //Log.Info( $"[LobbyBotButton {GameObject.Name}] Use pressed but ray missed. from={from} dir={camera.WorldRotation.Forward}" );
             return;
         }
 
         // Only respond if the ray landed on THIS button's GameObject (or a child of it).
         if ( !IsSelfOrDescendant( result.GameObject ) )
         {
-            Log.Info( $"[LobbyBotButton {GameObject.Name}] Use pressed, ray hit '{result.GameObject.Name}' but not us." );
+            //Log.Info( $"[LobbyBotButton {GameObject.Name}] Use pressed, ray hit '{result.GameObject.Name}' but not us." );
             return;
         }
 
-        BroadcastAdjust( Delta );
+        ShowInteractPrompt();
+
+        // Handle input
+        if ( Input.Pressed( InteractAction ) )
+        {
+            BroadcastAdjust( Delta );
+        }
+    }
+
+    // Paint HUD with the interact glyph and action name
+    private void ShowInteractPrompt()
+    {
+        // Set universal layout properties
+        int marginBottom = 120;
+
+        // Set background rectangle properties
+        int bgRectWidth = 120;
+        int bgRectHeight = 60;
+        int bgBorderRadius = 15;
+        var bgRect = new Rect(
+            (Screen.Size.x / 2) - (bgRectWidth / 2),
+            (Screen.Size.y - marginBottom) - (bgRectHeight / 2),
+            bgRectWidth, bgRectHeight );
+
+        // Set glyph properties
+        var glyphSize = new Vector2( 40f, 40f );
+        var glyphTexture = Input.GetGlyph( InteractAction, InputGlyphSize.Medium, false );
+        var glyphRect = new Rect(
+            (Screen.Size.x / 2) - (bgRectWidth / 2) + 10f,
+            (Screen.Size.y - marginBottom) - (bgRectHeight / 2) + 10f,
+            glyphSize.x, glyphSize.y
+        );
+
+        // Set text properties
+        int textSize = 20;
+        int textWeight = 700;
+        string textFont = "Poppins";
+        Color textColor = Color.White;
+
+        // Paint HUD
+        HudPainter hud = Scene.Camera.Hud;
+        hud.DrawRect( bgRect, new Color( 0f, 0f, 0f, 0.6f ), bgBorderRadius );
+        hud.DrawTexture( glyphTexture, glyphRect );
+        hud.DrawText(
+            new TextRendering.Scope( InteractAction, textColor, textSize, textFont ) { FontWeight = textWeight },
+            new Vector2(
+                (Screen.Size.x / 2) + (glyphRect.Size.x / 2),
+                (Screen.Size.y - marginBottom) ),
+            TextFlag.Center
+        );
     }
 
     // Animates the button depress on use
