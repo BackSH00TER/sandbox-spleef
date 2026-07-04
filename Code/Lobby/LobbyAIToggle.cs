@@ -1,36 +1,47 @@
+using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// Trigger zone in the lobby that toggles <see cref="Bots.IsEnabled"/> on
-/// enter/exit. Behaves like <see cref="LobbyReadyUp"/> — only real players
-/// (non-bots) can flip the toggle so a bot walking into it doesn't feedback-loop.
-/// Host owns the state and fans the change to every client via broadcast RPC.
+/// Trigger zone in the lobby that toggles <see cref="Bots.IsEnabled"/> whenever
+/// a real player walks in. Behaves like <see cref="LobbyReadyUp"/> — bots are
+/// filtered so they can't self-toggle. Host owns the state and fans the change
+/// to every client via broadcast RPC.
 /// </summary>
 public sealed class LobbyAIToggle : Component, Component.ITriggerListener
 {
+	// A single player often has multiple colliders (body, feet, etc.), each of
+	// which fires OnTriggerEnter/Exit separately. Tracking roots means we only
+	// react on the empty→occupied transition and ignore duplicate enters, which
+	// would otherwise flip the toggle twice per walk-through.
+	private readonly HashSet<GameObject> _presentRoots = new();
+
 	public void OnTriggerEnter( Collider other )
 	{
-		if ( !ShouldRespondTo( other ) ) return;
+		GameObject root = GetTriggeringRoot( other );
+		if ( root == null ) return;
 
-		// Any client's trigger fires this — the broadcast RPC fans to everyone,
-		// and only the host actually spawns/despawns bots inside BroadcastSetAI.
+		if ( !_presentRoots.Add( root ) ) return;
+		if ( _presentRoots.Count != 1 ) return;
+
 		BroadcastSetAI( !Bots.IsEnabled );
 	}
 
 	public void OnTriggerExit( Collider other )
 	{
-		// Intentionally no-op — this is a toggle, not a hold. Stepping out doesn't
-		// flip it back so the state persists between rounds.
+		GameObject root = GetTriggeringRoot( other );
+		if ( root == null ) return;
+
+		_presentRoots.Remove( root );
 	}
 
-	private static bool ShouldRespondTo( Collider other )
+	private static GameObject GetTriggeringRoot( Collider other )
 	{
 		GameObject root = other.GameObject.Root;
-		if ( !root.IsValid() ) return false;
-		if ( root.GetComponent<PlayerController>() == null ) return false;
+		if ( !root.IsValid() ) return null;
+		if ( root.GetComponent<PlayerController>() == null ) return null;
 		// Ignore bots stepping in — they shouldn't self-toggle.
-		if ( root.IsBot() ) return false;
-		return true;
+		if ( root.IsBot() ) return null;
+		return root;
 	}
 
 	[Rpc.Broadcast]
