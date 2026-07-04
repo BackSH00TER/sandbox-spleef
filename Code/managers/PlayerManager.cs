@@ -5,7 +5,7 @@ public sealed class PlayerManager : Component, Component.INetworkListener
 
 	/// <summary>
 	/// Spawns player characters at random tile positions. Called by GameManager when the game starts.
-	/// If <see cref="BotConfig.IsEnabled"/> is on, also spawns <see cref="BotConfig.BotCount"/>
+	/// If <see cref="Bots.IsEnabled"/> is on, also spawns <see cref="Bots.BotCount"/>
 	/// bots at additional random tile positions.
 	/// </summary>
 	public void SpawnPlayers()
@@ -25,12 +25,12 @@ public sealed class PlayerManager : Component, Component.INetworkListener
 			player.NetworkSpawn( client );
 		}
 
-		if ( BotConfig.IsEnabled )
+		if ( Bots.IsEnabled )
 		{
-			for ( int i = 0; i < BotConfig.BotCount; i++ )
+			for ( int i = 0; i < Bots.BotCount; i++ )
 			{
 				Vector3 position = TakeSpawnPosition( AvailableSpawnPositions );
-				BotDirector.SpawnAt( PlayerPrefab, new Transform( position, Rotation.Identity, Vector3.One ), i );
+				BotManager.SpawnAt( PlayerPrefab, new Transform( position, Rotation.Identity, Vector3.One ), i );
 			}
 		}
 	}

@@ -33,8 +33,8 @@ public sealed class PlayerOutfit : Component
             // via Network.Refresh. Owner-only so only the host rolls / restores.
             if ( !Network.IsOwner ) return;
             dresser.Source = Dresser.ClothingSource.Manual;
-            BotBrain brain = GetComponent<BotBrain>();
-            await BotOutfits.ApplyForSlot( dresser, brain.IsValid() ? brain.Slot : 0 );
+            BotController botController = GetComponent<BotController>();
+            await Bots.ApplyOutfitForSlot( dresser, botController.IsValid() ? botController.Slot : 0 );
             if ( !this.IsValid() ) return;
             GameObject.Network.Refresh();
             return;

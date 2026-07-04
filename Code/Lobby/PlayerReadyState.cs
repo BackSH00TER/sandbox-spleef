@@ -22,7 +22,7 @@ public sealed class PlayerReadyState : Component
     {
         get
         {
-            BotBrain bot = GetComponent<BotBrain>();
+            BotController bot = GetComponent<BotController>();
             if ( bot != null ) return Leaderboard.BotId( bot.Slot );
             ulong steamId = Network.Owner?.SteamId ?? 0UL;
             return steamId == 0UL ? null : Leaderboard.PlayerId( steamId );

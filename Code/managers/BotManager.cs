@@ -4,10 +4,10 @@ using System.Linq;
 /// <summary>
 /// Host-only. Owns bot spawn/despawn in whatever scene it lives in (lobby uses
 /// this to populate the lobby view; the game scene has its own bot spawn path
-/// via <see cref="PlayerManager"/>). Reconciles the live bot list against
-/// <see cref="BotConfig.IsEnabled"/> whenever asked, and once at start.
+/// via <see cref="PlayerManager"/>). Keeps the live bot count in sync with
+/// <see cref="Bots.IsEnabled"/> whenever asked, and once at start.
 /// </summary>
-public sealed class BotDirector : Component
+public sealed class BotManager : Component
 {
 	/// <summary>Prefab to clone for each bot. Same prefab as real players.</summary>
 	[Property] public GameObject BotPrefab { get; set; }
@@ -15,27 +15,27 @@ public sealed class BotDirector : Component
 	protected override void OnStart()
 	{
 		if ( !Networking.IsHost ) return;
-		Reconcile();
+		SyncBotCount();
 	}
 
-	/// <summary>Bring the live bot count in line with <see cref="BotConfig.IsEnabled"/>.</summary>
-	public void Reconcile()
+	/// <summary>Bring the live bot count in line with <see cref="Bots.IsEnabled"/>.</summary>
+	public void SyncBotCount()
 	{
 		if ( !Networking.IsHost ) return;
 
-		List<BotBrain> existing = Scene.GetAllComponents<BotBrain>().ToList();
-		int desired = BotConfig.IsEnabled ? BotConfig.BotCount : 0;
+		List<BotController> existing = Scene.GetAllComponents<BotController>().ToList();
+		int desired = Bots.IsEnabled ? Bots.BotCount : 0;
 
 		while ( existing.Count > desired )
 		{
-			BotBrain victim = existing[existing.Count - 1];
+			BotController victim = existing[existing.Count - 1];
 			existing.RemoveAt( existing.Count - 1 );
 			victim.GameObject.Destroy();
 		}
 
 		while ( existing.Count < desired )
 		{
-			BotBrain spawned = SpawnBot( existing.Count );
+			BotController spawned = SpawnBot( existing.Count );
 			if ( spawned != null )
 			{
 				existing.Add( spawned );
@@ -47,7 +47,7 @@ public sealed class BotDirector : Component
 		}
 	}
 
-	private BotBrain SpawnBot( int slot )
+	private BotController SpawnBot( int slot )
 	{
 		// Use the lobby's normal spawn distribution so bots mix in with real players.
 		LobbyNetworkSpawner spawner = Scene.GetAllComponents<LobbyNetworkSpawner>().FirstOrDefault();
@@ -56,22 +56,18 @@ public sealed class BotDirector : Component
 	}
 
 	/// <summary>
-	/// Host-only. Clone the given prefab at the given transform, tag it as a bot,
-	/// and network-spawn it host-owned. Used by both this director (lobby scene)
-	/// and <see cref="PlayerManager"/> (game scene, spawns at tile positions).
-	/// The <paramref name="slot"/> keys into <see cref="BotNames.ForSlot"/> so the
-	/// same bot slot keeps its name across scene transitions.
+	/// Host-only. Spawn a bot at the given transform. <paramref name="slot"/> keys per-slot identity (name, outfit).
 	/// </summary>
-	public static BotBrain SpawnAt( GameObject prefab, Transform transform, int slot )
+	public static BotController SpawnAt( GameObject prefab, Transform transform, int slot )
 	{
 		if ( !Networking.IsHost ) return null;
 		if ( !prefab.IsValid() )
 		{
-			Log.Warning( "BotDirector.SpawnAt: prefab is not assigned." );
+			Log.Warning( "BotManager.SpawnAt: prefab is not assigned." );
 			return null;
 		}
 
-		string name = BotNames.ForSlot( slot );
+		string name = Bots.NameForSlot( slot );
 		GameObject bot = prefab.Clone( transform.WithScale( 1f ), name: $"Bot - {name}" );
 
 		PlayerController pc = bot.GetComponent<PlayerController>();
@@ -80,13 +76,13 @@ public sealed class BotDirector : Component
 			pc.UseInputControls = false;
 		}
 
-		BotBrain brain = bot.GetComponent<BotBrain>() ?? bot.AddComponent<BotBrain>();
+		BotController controller = bot.GetComponent<BotController>() ?? bot.AddComponent<BotController>();
 
-		// NetworkSpawn with no connection = host-owned. BotBrain will run its
+		// NetworkSpawn with no connection = host-owned. BotController will run its
 		// (future) decision logic on the owner.
 		bot.NetworkSpawn();
 
-		brain.Initialize( name, slot );
-		return brain;
+		controller.Initialize( name, slot );
+		return controller;
 	}
 }

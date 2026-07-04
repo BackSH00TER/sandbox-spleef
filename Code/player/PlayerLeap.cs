@@ -14,46 +14,28 @@ public sealed class PlayerLeap : Component, PlayerController.IEvents
 	public float LeapCooldown = 3f;
 	public float LeapCooldownTime = 0f;
 
+	// Captured on BeginLeap so FinishLeap can restore whatever state the controller
+	// had before the leap (bots start input-suppressed and should stay that way).
+	private bool _restoreInputControls;
+
 	protected override void OnStart()
 	{
-		if ( !Network.IsOwner )
-		{
-			return;
-		}
-		// Bots don't get the on-screen control hint UI — host owns them but is
-		// also the local player, so without this guard each bot spawns a duplicate HUD.
-		if ( this.IsBot() )
-		{
-			return;
-		}
+		if ( !Network.IsOwner ) return;
+		// Host owns bots but is also the local player; without this guard every bot
+		// would spawn its own on-screen control hint on the host.
+		if ( this.IsBot() ) return;
 		AddUI();
 	}
 
 	protected override void OnUpdate()
 	{
-		if ( !Network.IsOwner )
-		{
-			return;
-		}
-		// Bots aren't driven by real input — skip so the host's attack1 press
-		// doesn't make every bot leap in unison.
-		if ( this.IsBot() )
-		{
-			return;
-		}
-
-		if ( IsLeaping )
-		{
-			return;
-		}
+		if ( !Network.IsOwner ) return;
+		if ( IsLeaping ) return;
 
 		LeapCooldownTime -= Time.Delta;
-		if ( LeapCooldownTime < 0.01 )
+		if ( LeapCooldownTime < 0.01 && Input.Pressed( "attack1" ) && TargetController.UseInputControls )
 		{
-			if ( Input.Pressed( "attack1" ) && TargetController.UseInputControls )
-			{
-				BeginLeap();
-			}
+			BeginLeap();
 		}
 	}
 
@@ -74,43 +56,32 @@ public sealed class PlayerLeap : Component, PlayerController.IEvents
 		LeapCooldownTime = LeapCooldown;
 
 		// Update properties
+		// Capture the current input state so we can restore it after the leap. (bots start input-suppressed and should stay that way)
+		_restoreInputControls = TargetController.UseInputControls;
 		TargetController.UseInputControls = false;
 		TargetRenderer.Set( "special_movement_states", 2 );
 
 		// Get movement variables
-		var rb = TargetController.GetComponent<Rigidbody>();
+		Rigidbody rb = TargetController.GetComponent<Rigidbody>();
 		Vector3 upVelocity = Vector3.Up * 400f;
 		Vector3 flatEyeAngle = new Vector3( TargetController.EyeAngles.Forward.x, TargetController.EyeAngles.Forward.y, 0 );
 		Vector3 forwardVelocity = flatEyeAngle.Normal * 400f;
-		Vector3 leapVelocity = upVelocity + forwardVelocity;
 
 		// Apply movement
 		TargetController.Jump( upVelocity );
-		rb.Velocity = leapVelocity;
-
-		Rotation newRotation = Rotation.LookAt( forwardVelocity );
-		TargetBody.WorldRotation = newRotation;
+		rb.Velocity = upVelocity + forwardVelocity;
+		TargetBody.WorldRotation = Rotation.LookAt( forwardVelocity );
 	}
 
 	void PlayerController.IEvents.OnLanded( float distance, Vector3 impactVelocity )
 	{
-		if ( IsLeaping )
-		{
-			FinishLeap();
-		}
-
+		if ( IsLeaping ) FinishLeap();
 	}
 
 	private void FinishLeap()
 	{
 		IsLeaping = false;
-
 		TargetRenderer.Set( "special_movement_states", 0 );
-		// Bots should stay input-suppressed forever; only restore input for real players.
-		if ( !this.IsBot() )
-		{
-			TargetController.UseInputControls = true;
-		}
+		TargetController.UseInputControls = _restoreInputControls;
 	}
-
 }

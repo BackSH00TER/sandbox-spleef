@@ -164,7 +164,7 @@
           "OnComponentUpdate": null
         },
         {
-          "__type": "BotDirector",
+          "__type": "BotManager",
           "__guid": "2fcf48bc-08d0-4f35-aa0f-d66929e33b48",
           "__enabled": true,
           "Flags": 0,

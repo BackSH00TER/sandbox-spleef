@@ -1,7 +1,7 @@
 using System.Linq;
 
 /// <summary>
-/// Trigger zone in the lobby that toggles <see cref="BotConfig.IsEnabled"/> on
+/// Trigger zone in the lobby that toggles <see cref="Bots.IsEnabled"/> on
 /// enter/exit. Behaves like <see cref="LobbyReadyUp"/> — only real players
 /// (non-bots) can flip the toggle so a bot walking into it doesn't feedback-loop.
 /// Host owns the state and fans the change to every client via broadcast RPC.
@@ -14,7 +14,7 @@ public sealed class LobbyAIToggle : Component, Component.ITriggerListener
 
 		// Any client's trigger fires this — the broadcast RPC fans to everyone,
 		// and only the host actually spawns/despawns bots inside BroadcastSetAI.
-		BroadcastSetAI( !BotConfig.IsEnabled );
+		BroadcastSetAI( !Bots.IsEnabled );
 	}
 
 	public void OnTriggerExit( Collider other )
@@ -36,13 +36,13 @@ public sealed class LobbyAIToggle : Component, Component.ITriggerListener
 	[Rpc.Broadcast]
 	private void BroadcastSetAI( bool enabled )
 	{
-		BotConfig.SetEnabled( enabled );
+		Bots.SetEnabled( enabled );
 
 		// Only the host reconciles the actual spawn list; other clients just update
-		// their local flag so any UI reading BotConfig.IsEnabled stays in sync.
+		// their local flag so any UI reading Bots.IsEnabled stays in sync.
 		if ( !Networking.IsHost ) return;
 
-		BotDirector director = Scene.GetAllComponents<BotDirector>().FirstOrDefault();
-		director?.Reconcile();
+		BotManager botManager = Scene.GetAllComponents<BotManager>().FirstOrDefault();
+		botManager?.SyncBotCount();
 	}
 }
