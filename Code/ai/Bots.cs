@@ -1,21 +1,27 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Sandbox;
 
 /// <summary>
-/// Session-wide bot state: enable toggle, per-slot identity (name, outfit), and
-/// detection util methods. Slot index (0..BotCount-1) keys the persistent
+/// Session-wide bot state: desired-count, per-slot identity (name, outfit), and
+/// detection util methods. Slot index (0..DesiredCount-1) keys the persistent
 /// per-bot data so identity survives lobby ↔ game scene transitions.
 /// Cleared on host restart.
 /// </summary>
 public static class Bots
 {
-    public const int BotCount = 3;
+    public const int MaxCount = 30;
 
-    public static bool IsEnabled { get; private set; }
+    /// <summary>How many bots the host wants live. Callers change this via <see cref="ChangeCount"/>.</summary>
+    public static int DesiredCount { get; private set; }
 
-    public static void SetEnabled( bool enabled ) => IsEnabled = enabled;
+    /// <summary>Overwrite the count (used by the RPC that fans a change to every client).</summary>
+    public static void SetDesiredCount( int count ) => DesiredCount = Math.Clamp( count, 0, MaxCount );
+
+    /// <summary>Bump <see cref="DesiredCount"/> by <paramref name="delta"/>, clamped to [0, MaxCount].</summary>
+    public static int ChangeCount( int delta ) => DesiredCount = Math.Clamp( DesiredCount + delta, 0, MaxCount );
 
     // --- Detection ---------------------------------------------------------
 

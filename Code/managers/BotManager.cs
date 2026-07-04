@@ -5,7 +5,7 @@ using System.Linq;
 /// Host-only. Owns bot spawn/despawn in whatever scene it lives in (lobby uses
 /// this to populate the lobby view; the game scene has its own bot spawn path
 /// via <see cref="PlayerManager"/>). Keeps the live bot count in sync with
-/// <see cref="Bots.IsEnabled"/> whenever asked, and once at start.
+/// <see cref="Bots.DesiredCount"/> whenever asked, and once at start.
 /// </summary>
 public sealed class BotManager : Component
 {
@@ -18,13 +18,13 @@ public sealed class BotManager : Component
 		SyncBotCount();
 	}
 
-	/// <summary>Bring the live bot count in line with <see cref="Bots.IsEnabled"/>.</summary>
+	/// <summary>Bring the live bot count in line with <see cref="Bots.DesiredCount"/>.</summary>
 	public void SyncBotCount()
 	{
 		if ( !Networking.IsHost ) return;
 
 		List<BotController> existing = Scene.GetAllComponents<BotController>().ToList();
-		int desired = Bots.IsEnabled ? Bots.BotCount : 0;
+		int desired = Bots.DesiredCount;
 
 		while ( existing.Count > desired )
 		{
