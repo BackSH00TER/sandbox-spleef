@@ -155,8 +155,8 @@ public sealed class VictoryManager : Component
         // Session-wide leaderboard: fanned out so every client increments
         // their own local Leaderboard copy. Bots use PlayerReadyState.LeaderboardId
         // (a synthetic id) so wins/crowns are tracked per-bot and don't smear onto the host.
-        ulong winnerLeaderboardId = winner?.GetComponent<PlayerReadyState>()?.LeaderboardId ?? 0UL;
-        if ( winnerLeaderboardId != 0UL )
+        string winnerLeaderboardId = winner?.GetComponent<PlayerReadyState>()?.LeaderboardId;
+        if ( !string.IsNullOrEmpty( winnerLeaderboardId ) )
         {
             BroadcastRecordWin( winnerLeaderboardId );
         }
@@ -515,10 +515,10 @@ public sealed class VictoryManager : Component
     }
 
     [Rpc.Broadcast]
-    private void BroadcastRecordWin( ulong steamId )
+    private void BroadcastRecordWin( string id )
     {
-        Leaderboard.RecordWin( steamId );
-        if ( Connection.Local != null && Connection.Local.SteamId == steamId )
+        Leaderboard.RecordWin( id );
+        if ( Connection.Local != null && id == Leaderboard.PlayerId( Connection.Local.SteamId ) )
         {
             PlayerStats.RecordWin();
         }

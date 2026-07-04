@@ -16,27 +16,20 @@ public sealed class PlayerReadyState : Component
     public string DisplayName => GameObject.GetPlayerName();
 
     // Bots don't have a real SteamId (they're host-owned, so Network.Owner.SteamId is the
-    // host's). Use BotBrain.LeaderboardId as their synthetic identity for leaderboard/crown
-    // lookups so wins/crowns don't smear onto the host.
-    public ulong LeaderboardId
+    // host's). Use a per-slot bot id as their synthetic identity for leaderboard/crown
+    // lookups so wins/crowns don't smear onto the host and persist across respawns.
+    public string LeaderboardId
     {
         get
         {
             BotBrain bot = GetComponent<BotBrain>();
-            if ( bot != null ) return bot.LeaderboardId;
-            return Network.Owner?.SteamId ?? 0UL;
+            if ( bot != null ) return Leaderboard.BotId( bot.Slot );
+            ulong steamId = Network.Owner?.SteamId ?? 0UL;
+            return steamId == 0UL ? null : Leaderboard.PlayerId( steamId );
         }
     }
 
-    public int WinCount
-    {
-        get
-        {
-            ulong id = LeaderboardId;
-            if ( id == 0UL ) return 0;
-            return Leaderboard.GetWins( id );
-        }
-    }
+    public int WinCount => Leaderboard.GetWins( LeaderboardId );
 
     protected override void OnStart()
     {
@@ -48,8 +41,8 @@ public sealed class PlayerReadyState : Component
         if ( !Crown.IsValid() ) return;
         Crown.GameObject.Enabled = false;
 
-        ulong id = LeaderboardId;
-        if ( id != 0UL && id == Leaderboard.PreviousWinnerSteamId )
+        string id = LeaderboardId;
+        if ( !string.IsNullOrEmpty( id ) && id == Leaderboard.PreviousWinnerId )
         {
             Crown.GameObject.Enabled = true;
         }

@@ -13,48 +13,53 @@ public sealed class BotBrain : Component
 {
 	[Sync] public string BotName { get; set; } = "Bot";
 
-	// Synthetic per-bot id used in place of Network.Owner.SteamId for leaderboard/crown
-	// lookups. All bots are host-owned so their owner SteamId is the host's — using
-	// that would credit the host with every bot's win and put the crown on every bot.
-	[Sync] public ulong LeaderboardId { get; set; }
-
-	// Stable slot index (0..BotCount-1) used to key persistent name / outfit lookups
-	// (see BotNames.ForSlot, BotOutfits.ApplyForSlot) so bot #N keeps its identity
-	// across lobby ↔ game scene transitions.
+	// Stable slot index (0..BotCount-1) used to key persistent name / outfit / leaderboard
+	// lookups (see BotNames.ForSlot, BotOutfits.ApplyForSlot, Leaderboard.BotId) so bot #N
+	// keeps its identity across lobby ↔ game scene transitions.
 	[Sync] public int Slot { get; set; }
 
 	/// <summary>How often the bot re-picks a target tile (also fires on arrival).</summary>
-	[Property] public float RetargetInterval { get; set; } = 1.5f;
+	private const float RetargetInterval = 1.5f;
 
 	/// <summary>Walk speed applied via WishVelocity while pursuing a target.</summary>
-	[Property] public float MoveSpeed { get; set; } = 200f;
+	private const float MoveSpeed = 200f;
 
 	/// <summary>Max XY distance to a tile that still counts as "walkable adjacent".</summary>
-	[Property] public float WalkReach { get; set; } = 180f;
+	private const float WalkReach = 180f;
 
 	/// <summary>Max XY distance to a tile the bot will attempt to reach via a jump.</summary>
-	[Property] public float JumpReach { get; set; } = 220f;
+	private const float JumpReach = 140f;
 
-	/// <summary>Max XY distance to a tile the bot will attempt to reach via a dive (leap).</summary>
-	[Property] public float DiveReach { get; set; } = 550f;
+	/// <summary>Max XY distance to a tile the bot will attempt to reach via a leap alone.</summary>
+	private const float DiveReach = 350f;
+
+	/// <summary>Max XY distance to a tile the bot will attempt to reach via a jump followed by a mid-air leap.</summary>
+	private const float JumpLeapReach = 440f;
 
 	/// <summary>Distance from the target position at which the bot re-targets.</summary>
-	[Property] public float ArrivalRadius { get; set; } = 40f;
+	private const float ArrivalRadius = 40f;
 
 	/// <summary>Upward velocity applied when the bot chooses to jump (matches player Jump).</summary>
-	[Property] public float JumpUpVelocity { get; set; } = 300f;
+	private const float JumpUpVelocity = 300f;
 
 	private PlayerController _controller;
 	private PlayerLeap _leap;
 	private Vector3? _targetPosition;
+	private Tile _targetTile;
+	private Tile _previousTile;
+	private Vector3 _lastHeading;
 	private RealTimeSince _sinceRetarget;
+	private RealTimeSince _sinceComboJump;
+	private bool _isComboLeapPending;
+	// Delay between the initial jump and the follow-up leap. Short enough that the
+	// bot is still rising, so the leap's forward velocity stacks on the jump for max range.
+	private const float ComboLeapDelay = 0.08f;
 
 	/// <summary>Host-only. Configure a freshly spawned bot.</summary>
 	public void Initialize( string name, int slot )
 	{
 		BotName = name;
 		Slot = slot;
-		LeaderboardId = ((ulong)(uint)Guid.NewGuid().GetHashCode()) | 0x1000_0000_0000_0000UL;
 
 		// Bots are always ready so they don't gate the launch countdown.
 		PlayerReadyState state = GetComponent<PlayerReadyState>();
@@ -106,10 +111,31 @@ public sealed class BotBrain : Component
 			return;
 		}
 
+		// Fire the deferred half of a jump+leap combo once the delay has elapsed.
+		if ( _isComboLeapPending && _sinceComboJump >= ComboLeapDelay )
+		{
+			_isComboLeapPending = false;
+			if ( _leap != null && !_leap.IsLeaping && _leap.LeapCooldownTime <= 0f )
+			{
+				_leap.BeginLeap();
+			}
+			return;
+		}
+
+		// While a combo leap is queued, don't re-steer — WishVelocity would fight the airborne trajectory.
+		if ( _isComboLeapPending )
+		{
+			return;
+		}
+
 		bool hasArrived = _targetPosition.HasValue
 			&& (WorldPosition.WithZ( 0 ) - _targetPosition.Value.WithZ( 0 )).Length < ArrivalRadius;
 
-		if ( !_targetPosition.HasValue || _sinceRetarget > RetargetInterval || hasArrived )
+		// Retarget on arrival, on first tick, or if the tile we were headed to
+		// became unsafe under us. Skipping the timer-based retarget keeps the bot
+		// from flip-flopping mid-walk, which is the main source of jittery motion.
+		bool targetInvalid = _targetTile != null && (!_targetTile.IsValid() || !_targetTile.IsSafe);
+		if ( !_targetPosition.HasValue || hasArrived || targetInvalid )
 		{
 			PickTarget();
 			_sinceRetarget = 0f;
@@ -117,6 +143,10 @@ public sealed class BotBrain : Component
 
 		if ( _targetPosition.HasValue )
 		{
+			// Edge-detect safety net BEFORE steering: if we'd step into a gap this
+			// tick, launch now while still on solid ground. PickTarget's ground-
+			// continuity check is coarse (3 samples), so gaps can still slip through.
+			TryPreemptiveLaunch();
 			Steer( _targetPosition.Value );
 		}
 		else
@@ -125,14 +155,71 @@ public sealed class BotBrain : Component
 		}
 	}
 
+	// Traces forward-and-down along the current heading; if there's no ground within
+	// stepping distance, we're about to walk off an edge. Fire the cheapest reach
+	// action that covers the remaining distance to the current target. Only fires
+	// while grounded and moving (Jump is a no-op mid-air anyway).
+	private void TryPreemptiveLaunch()
+	{
+		if ( !_controller.IsOnGround ) return;
+		if ( _isComboLeapPending ) return;
+		if ( _lastHeading.LengthSquared < 0.01f ) return;
+
+		Vector3 ahead = WorldPosition + _lastHeading * 60f;
+		SceneTraceResult trace = Scene.Trace.Ray( ahead + Vector3.Up * 20f, ahead + Vector3.Down * 80f )
+			.IgnoreGameObjectHierarchy( GameObject )
+			.Run();
+		if ( trace.Hit ) return;
+
+		float distToTarget = (_targetPosition.Value.WithZ( 0 ) - WorldPosition.WithZ( 0 )).Length;
+		bool isLeapReady = _leap != null && !_leap.IsLeaping && _leap.LeapCooldownTime <= 0f;
+
+		FaceTarget( _targetPosition.Value );
+
+		if ( distToTarget <= JumpReach )
+		{
+			_controller.Jump( Vector3.Up * JumpUpVelocity );
+			return;
+		}
+		if ( distToTarget <= DiveReach && isLeapReady )
+		{
+			_leap.BeginLeap();
+			return;
+		}
+		if ( distToTarget <= JumpLeapReach && isLeapReady )
+		{
+			_controller.Jump( Vector3.Up * JumpUpVelocity );
+			_isComboLeapPending = true;
+			_sinceComboJump = 0f;
+			return;
+		}
+
+		// Nothing reachable but we're about to step off — fire the biggest option
+		// available anyway. Better to try and fail than walk off with no attempt.
+		if ( isLeapReady )
+		{
+			_controller.Jump( Vector3.Up * JumpUpVelocity );
+			_isComboLeapPending = true;
+			_sinceComboJump = 0f;
+		}
+		else
+		{
+			_controller.Jump( Vector3.Up * JumpUpVelocity );
+		}
+	}
+
 	private void PickTarget()
 	{
 		Vector3 myPos = WorldPosition;
 
+		// Remember where we came from so we don't turn straight around and walk back
+		// onto a tile that may have crumbled behind us.
+		_previousTile = _targetTile;
+
 		// Rank all safe tiles by XY distance. Ignore anything far below/above the
 		// bot so a bot on layer 0 doesn't try to target a tile on layer 3.
 		List<(Tile tile, float distXY, float distZ)> candidates = Scene.GetAllComponents<Tile>()
-			.Where( t => t.IsValid() && t.IsSafe )
+			.Where( t => t.IsValid() && t.IsSafe && t != _previousTile )
 			.Select( t =>
 			{
 				Vector3 delta = t.WorldPosition - myPos;
@@ -150,38 +237,110 @@ public sealed class BotBrain : Component
 			return;
 		}
 
-		// Prefer a random tile within walk range so bots don't all bee-line to the
-		// same closest tile.
-		List<(Tile tile, float distXY, float distZ)> walkable = candidates.Where( x => x.distXY <= WalkReach ).ToList();
+		// Prefer a walkable neighbour (continuous ground between us and it), weighted
+		// toward the current heading so bots don't zigzag between adjacent tiles.
+		// The ground-continuity check is critical: without it, a tile 160 units away
+		// across a gap counts as "walkable" and the bot walks straight off the edge
+		// instead of jumping.
+		List<(Tile tile, float distXY, float distZ)> walkable = candidates
+			.Where( x => x.distXY <= WalkReach && HasGroundBetween( myPos, x.tile.WorldPosition ) )
+			.ToList();
 		if ( walkable.Count > 0 )
 		{
-			var pick = walkable[Sandbox.Game.Random.Int( walkable.Count - 1 )];
+			(Tile tile, float distXY, float distZ) pick = PickWeightedByHeading( walkable, myPos );
 			_targetPosition = pick.tile.WorldPosition;
+			_targetTile = pick.tile;
 			return;
 		}
 
-		// Nothing adjacent — try to jump to the nearest reachable tile.
-		var jumpPick = candidates.FirstOrDefault( x => x.distXY <= JumpReach );
-		if ( jumpPick.tile.IsValid() )
+		// No safely walkable neighbour — commit to the nearest safe tile and pick
+		// the cheapest airborne action that can cover the gap. Firing the jump/leap
+		// from PickTarget (rather than mid-walk) means launch happens from the
+		// current tile before the bot steps off the edge.
+		(Tile tile, float distXY, float distZ) nearest = candidates[0];
+		_targetPosition = nearest.tile.WorldPosition;
+		_targetTile = nearest.tile;
+		FaceTarget( _targetPosition.Value );
+
+		bool isLeapReady = _leap != null && !_leap.IsLeaping && _leap.LeapCooldownTime <= 0f;
+
+		if ( nearest.distXY <= JumpReach )
 		{
-			_targetPosition = jumpPick.tile.WorldPosition;
-			FaceTarget( _targetPosition.Value );
 			_controller.Jump( Vector3.Up * JumpUpVelocity );
 			return;
 		}
-
-		// Still nothing — dive.
-		var divePick = candidates.FirstOrDefault( x => x.distXY <= DiveReach );
-		if ( divePick.tile.IsValid() && _leap != null && !_leap.IsLeaping && _leap.LeapCooldownTime <= 0f )
+		if ( nearest.distXY <= DiveReach && isLeapReady )
 		{
-			_targetPosition = divePick.tile.WorldPosition;
-			FaceTarget( _targetPosition.Value );
 			_leap.BeginLeap();
 			return;
 		}
+		if ( nearest.distXY <= JumpLeapReach && isLeapReady )
+		{
+			_controller.Jump( Vector3.Up * JumpUpVelocity );
+			_isComboLeapPending = true;
+			_sinceComboJump = 0f;
+			return;
+		}
 
-		// Nothing safely reachable — just walk toward the nearest safe tile and hope.
-		_targetPosition = candidates[0].tile.WorldPosition;
+		// Out of every reach tier — walk toward it and hope (or die trying).
+	}
+
+	// Sample a few points between us and the target, downward-trace each: if any
+	// sample has no ground within a reasonable drop distance, there's a gap on the
+	// path and we can't just walk across.
+	private bool HasGroundBetween( Vector3 from, Vector3 to )
+	{
+		const int Samples = 3;
+		for ( int i = 1; i <= Samples; i++ )
+		{
+			float t = i / (float)(Samples + 1);
+			Vector3 sample = Vector3.Lerp( from, to, t );
+			SceneTraceResult trace = Scene.Trace.Ray( sample + Vector3.Up * 20f, sample + Vector3.Down * 200f )
+				.IgnoreGameObjectHierarchy( GameObject )
+				.Run();
+			if ( !trace.Hit ) return false;
+		}
+		return true;
+	}
+
+	// Weighted random pick from walkable candidates. Weight = 1 + dot(headingDir, dirToTile),
+	// clamped to a small floor so tiles behind still have a small chance. When no
+	// heading is set (first pick), degenerates to uniform random.
+	private (Tile tile, float distXY, float distZ) PickWeightedByHeading(
+		List<(Tile tile, float distXY, float distZ)> walkable, Vector3 myPos )
+	{
+		if ( walkable.Count == 1 ) return walkable[0];
+
+		if ( _lastHeading.LengthSquared < 0.01f )
+		{
+			return walkable[Sandbox.Game.Random.Int( walkable.Count - 1 )];
+		}
+
+		float totalWeight = 0f;
+		float[] weights = new float[walkable.Count];
+		for ( int i = 0; i < walkable.Count; i++ )
+		{
+			Vector3 toTile = (walkable[i].tile.WorldPosition - myPos).WithZ( 0 );
+			if ( toTile.LengthSquared < 0.01f )
+			{
+				weights[i] = 0.1f;
+			}
+			else
+			{
+				float dot = Vector3.Dot( toTile.Normal, _lastHeading );
+				weights[i] = MathF.Max( 0.15f, 1f + dot );
+			}
+			totalWeight += weights[i];
+		}
+
+		float roll = Sandbox.Game.Random.Float( 0f, totalWeight );
+		float acc = 0f;
+		for ( int i = 0; i < walkable.Count; i++ )
+		{
+			acc += weights[i];
+			if ( roll <= acc ) return walkable[i];
+		}
+		return walkable[walkable.Count - 1];
 	}
 
 	private void Steer( Vector3 target )
@@ -194,6 +353,7 @@ public sealed class BotBrain : Component
 		}
 
 		Vector3 dir = toTarget.Normal;
+		_lastHeading = dir;
 		_controller.WishVelocity = dir * MoveSpeed;
 		FaceTarget( target );
 	}
