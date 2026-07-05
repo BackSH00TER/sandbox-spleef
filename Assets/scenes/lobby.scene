@@ -2179,7 +2179,7 @@
               "__enabled": true,
               "Flags": 0,
               "Delta": 1,
-              "InteractPrompt": "Use",
+              "InteractAction": "Use",
               "InteractRadius": 10,
               "MaxInteractDistance": 250,
               "Model": {
@@ -2274,7 +2274,7 @@
               "__enabled": true,
               "Flags": 0,
               "Delta": -1,
-              "InteractPrompt": "Use",
+              "InteractAction": "Use",
               "InteractRadius": 10,
               "MaxInteractDistance": 250,
               "Model": {
@@ -2498,6 +2498,9 @@
   "ResourceVersion": 3,
   "Title": null,
   "Description": null,
-  "__references": [],
+  "__references": [
+    "titanovsky.lo_symbol_minus#79171",
+    "titanovsky.lo_symbol_plus#79173"
+  ],
   "__version": 3
 }
