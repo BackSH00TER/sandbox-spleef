@@ -3,49 +3,92 @@ using Sandbox.Physics;
 
 public sealed class PlayerGrab : Component
 {
+	[Property] public PlayerController TargetController { get; set; }
+	[Property] public SkinnedModelRenderer TargetRenderer { get; set; }
 	[Property, InputAction] public string GrabInput { get; set; } = "attack2";
-	[Property] public float GrabRange { get; set; } = 150f;
+	public float GrabRange { get; private set; } = 350f;
 
-	private PhysicsJoint _grabJoint;
+	private Rigidbody _grabbedBody = null;
+	private PhysicsJoint _grabJoint = null;
+
 
 	protected override void OnUpdate()
 	{
-		if ( Input.Pressed( GrabInput ) )
+		if ( Input.Down( GrabInput ) )
 		{
-			TryGrab();
+			_grabbedBody ??= TryGrab();
 		}
 
-		if ( Input.Released( GrabInput ) && _grabJoint != null )
+		if ( Input.Released( GrabInput ) )
 		{
-			_grabJoint.Remove();
-			_grabJoint = null;
+			ReleaseGrab();
 		}
 	}
 
-	private void TryGrab()
+	protected override void OnFixedUpdate()
 	{
+		if ( _grabbedBody != null )
+		{
+			ApplyGrabForce();
+		}
+	}
+
+
+	private Rigidbody TryGrab()
+	{
+		// Animation
+		TargetRenderer.Set( "holdtype", 4 ); // Set holdtype to grab");
+
+		// Raycast
 		var start = Scene.Camera.WorldPosition;
 		var dir = Scene.Camera.WorldTransform.Forward;
 		var ray = new Ray( start, dir );
-
 		var tr = Scene.Trace.Ray( ray, GrabRange )
+			.Radius( 20f )
+			.IgnoreGameObjectHierarchy( GameObject )
 			.Run();
 
-		if ( !tr.Hit ) return;
+		if ( !tr.Hit )
+			return null;
 
-		var target = tr.GameObject.Components.Get<PlayerController>();
-		if ( target == null ) return;
-
-		var myBody = GameObject.Components.Get<Rigidbody>();
 		var targetBody = tr.GameObject.Components.Get<Rigidbody>();
+		if ( targetBody == null )
+			return null;
 
-		if ( myBody == null || targetBody == null ) return;
+		return targetBody;
+	}
 
-		_grabJoint?.Remove();
+	private void ReleaseGrab()
+	{
+		// Animation
+		TargetRenderer.Set( "holdtype", 0 ); // Set holdtype to grab");
 
-		_grabJoint = PhysicsJoint.CreateFixed(
-			new PhysicsPoint( myBody.PhysicsBody, Vector3.Zero ),
-			new PhysicsPoint( targetBody.PhysicsBody, targetBody.WorldTransform.PointToLocal( tr.HitPosition ) )
-		);
+		if ( _grabbedBody == null )
+			return;
+
+		_grabbedBody.AngularDamping = 0f;
+		_grabbedBody.LinearDamping = 0f;
+		_grabbedBody = null;
+	}
+
+	private void ApplyGrabForce()
+	{
+		if ( _grabbedBody == null )
+		{
+			ReleaseGrab();
+			return;
+		}
+
+		var grabbedBodyPosition = _grabbedBody.WorldPosition;
+		var holdPosition = TargetController.EyePosition + (TargetController.EyeAngles.Forward * 50f);
+
+		var pullDirection = (holdPosition - grabbedBodyPosition).Normal;
+		var distance = grabbedBodyPosition.Distance( holdPosition );
+		var maxDistance = 50f;
+		var forceMultiplier = MathX.Clamp( distance / maxDistance, 0f, 1f );
+
+		_grabbedBody.AngularDamping = 5f;
+		_grabbedBody.LinearDamping = 5f;
+		_grabbedBody.ApplyForce( pullDirection * 3000f * _grabbedBody.Mass * forceMultiplier );
 	}
 }
