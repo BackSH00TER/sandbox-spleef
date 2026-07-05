@@ -3,7 +3,7 @@ using Sandbox.Physics;
 
 public sealed class PlayerGrab : Component
 {
-	[Property, InputAction] public string GrabInput { get; set; } = "use";
+	[Property, InputAction] public string GrabInput { get; set; } = "attack2";
 	[Property] public float GrabRange { get; set; } = 150f;
 
 	private PhysicsJoint _grabJoint;
