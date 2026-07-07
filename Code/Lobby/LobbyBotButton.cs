@@ -61,16 +61,12 @@ public sealed class LobbyBotButton : Component
             .Run();
         if ( !result.Hit )
         {
-            // Adding HUD works as visual debugging
-            // This would log every frame we're not looking at button
-            //Log.Info( $"[LobbyBotButton {GameObject.Name}] Use pressed but ray missed. from={from} dir={camera.WorldRotation.Forward}" );
             return;
         }
 
         // Only respond if the ray landed on THIS button's GameObject (or a child of it).
         if ( !IsSelfOrDescendant( result.GameObject ) )
         {
-            //Log.Info( $"[LobbyBotButton {GameObject.Name}] Use pressed, ray hit '{result.GameObject.Name}' but not us." );
             return;
         }
 
