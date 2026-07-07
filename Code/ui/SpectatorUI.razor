@@ -45,9 +45,7 @@
         if (isShowingResults)
         {
             GameObject winnerGameObject = VictoryManager.Winner;
-            winnerName = winnerGameObject.IsValid()
-                ? winnerGameObject.Network?.Owner?.DisplayName ?? "Winner"
-                : "Nobody";
+            winnerName = winnerGameObject.IsValid() ? winnerGameObject.GetPlayerName() : "Nobody";
             resultsSecondsRemaining = System.Math.Max(0, (int)System.Math.Ceiling((float)VictoryManager.ResultsTimer));
         }
         else

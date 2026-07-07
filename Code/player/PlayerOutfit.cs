@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 public sealed class PlayerOutfit : Component
 {
     [Property] public Dresser Dresser { get; set; }
-    [Property] public float StartDelay { get; set; } = 0.25f;
+    [Property] public float StartDelay { get; set; } = 0.05f;
 
     protected override void OnStart()
     {
@@ -24,6 +24,21 @@ public sealed class PlayerOutfit : Component
 
         await Task.DelayRealtimeSeconds( StartDelay );
         if ( !this.IsValid() ) return;
+
+        if ( this.IsBot() )
+        {
+            // Bots are host-owned so Dresser.Source = OwnerConnection would stream the
+            // host's avatar directly, ignoring the Clothing list. Switch to Manual so
+            // the outfit list is what actually gets rendered, then fan the change out
+            // via Network.Refresh. Owner-only so only the host rolls / restores.
+            if ( !Network.IsOwner ) return;
+            dresser.Source = Dresser.ClothingSource.Manual;
+            BotController botController = GetComponent<BotController>();
+            await Bots.ApplyOutfitForSlot( dresser, botController.IsValid() ? botController.Slot : 0 );
+            if ( !this.IsValid() ) return;
+            GameObject.Network.Refresh();
+            return;
+        }
 
         await dresser.Apply();
     }

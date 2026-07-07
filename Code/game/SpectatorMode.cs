@@ -15,7 +15,7 @@ public sealed class SpectatorMode : Component
     public bool IsActive { get; private set; }
 
     /// <summary>Display name of the player currently being spectated, or null.</summary>
-    public string SpectatingName => _spectatedPlayer.IsValid() ? _spectatedPlayer.Network?.Owner?.DisplayName ?? "Unknown" : null;
+    public string SpectatingName => _spectatedPlayer.IsValid() ? _spectatedPlayer.GetPlayerName() : null;
 
     private PlayerController _spectatedPlayer;
     private int _spectatedIndex;

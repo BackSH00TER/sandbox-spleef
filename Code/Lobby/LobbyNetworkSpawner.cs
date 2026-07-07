@@ -74,18 +74,18 @@ public sealed class LobbyNetworkSpawner : Component, Component.INetworkListener
         // for players who racked up wins before they joined.
         if ( Networking.IsHost )
         {
-            (ulong[] ids, int[] counts, ulong previousWinnerSteamId) = Leaderboard.Snapshot();
+            (string[] ids, int[] counts, string previousWinnerId) = Leaderboard.Snapshot();
             using ( Rpc.FilterInclude( channel ) )
             {
-                BroadcastLeaderboardSnapshot( ids, counts, previousWinnerSteamId );
+                BroadcastLeaderboardSnapshot( ids, counts, previousWinnerId );
             }
         }
     }
 
     [Rpc.Broadcast]
-    private void BroadcastLeaderboardSnapshot( ulong[] steamIds, int[] counts, ulong previousWinnerSteamId )
+    private void BroadcastLeaderboardSnapshot( string[] ids, int[] counts, string previousWinnerId )
     {
-        Leaderboard.ApplySnapshot( steamIds, counts, previousWinnerSteamId );
+        Leaderboard.ApplySnapshot( ids, counts, previousWinnerId );
         RefreshAllCrowns();
     }
 
@@ -97,11 +97,17 @@ public sealed class LobbyNetworkSpawner : Component, Component.INetworkListener
         }
     }
 
-    // Returns true if the given connection already has a player controller in the scene.
+    // Returns true if the given connection already has a REAL player controller in
+    // the scene. Bots are host-owned, so without the BotController exclusion the host would
+    // appear to already have a player as soon as any bot spawned — and their real
+    // player would never get created.
     private bool HasPlayerControllerFor( Connection client )
     {
         return Scene.GetAllComponents<PlayerController>()
-            .Any( pc => pc.IsValid() && pc.Network.Active && pc.Network.OwnerId == client.Id );
+            .Any( pc => pc.IsValid()
+                && pc.Network.Active
+                && pc.Network.OwnerId == client.Id
+                && !pc.IsBot() );
     }
 
     // Spawn a player for the given connection. The host owns this logic, and the engine
@@ -116,7 +122,7 @@ public sealed class LobbyNetworkSpawner : Component, Component.INetworkListener
     }
 
     // Pick a random spawn point and jitter it inside SpawnAreaSize.
-    private Transform FindSpawnLocation()
+    public Transform FindSpawnLocation()
     {
         SpawnPoint[] points = Scene.GetAllComponents<SpawnPoint>().ToArray();
         if ( points.Length == 0 ) return WorldTransform;

@@ -91,21 +91,25 @@ public sealed class GameManager : Component, Component.INetworkListener
 		if ( !Networking.IsHost ) return;
 		if ( player == null || !player.IsValid() ) return;
 
-		string name = player.Network?.Owner?.DisplayName ?? player.GameObject.Name;
+		// Bots are host-owned; sending the elimination filter to the host would put
+		// the host into spectator mode every time a bot dies.
+		bool isBot = player.IsBot();
+
+		string name = player.GetPlayerName();
 
 		// Destroy hasn't propagated yet, so filter out the eliminated player explicitly.
 		List<PlayerController> remaining = Scene.GetAllComponents<PlayerController>()
 			.Where( p => p.IsValid() && p != player )
 			.ToList();
 
-		Log.Info( $"Player '{name}' eliminated. Players remaining: {remaining.Count}" );
+		Log.Info( $"Player '{name}' eliminated (isBot={isBot}). Players remaining: {remaining.Count}" );
 
 		BroadcastPlayEliminationSound();
 
 		// Capture the owning connection before we destroy the player — Network.Owner
 		// becomes unreachable once the GameObject is gone.
 		Connection ownerConnection = player.Network?.Owner;
-		if ( ownerConnection != null )
+		if ( ownerConnection != null && !isBot )
 		{
 			using ( Rpc.FilterInclude( ownerConnection ) )
 			{

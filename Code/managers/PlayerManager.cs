@@ -5,25 +5,38 @@ public sealed class PlayerManager : Component, Component.INetworkListener
 
 	/// <summary>
 	/// Spawns player characters at random tile positions. Called by GameManager when the game starts.
+	/// Also spawns <see cref="Bots.DesiredCount"/> bots at additional random tile positions.
 	/// </summary>
 	public void SpawnPlayers()
 	{
 		if ( !Networking.IsHost ) return;
 
-		var clientsToSpawn = Connection.All;
 		var AvailableSpawnPositions = TileManager.AvailableSpawnLocations;
 		var randomSeed = System.DateTime.Now.Millisecond;
 		Sandbox.Game.SetRandomSeed( randomSeed );
 
-		foreach ( var client in clientsToSpawn )
+		foreach ( var client in Connection.All )
 		{
-			var selectedPosition = Sandbox.Game.Random.FromList( AvailableSpawnPositions );
-			AvailableSpawnPositions.Remove( selectedPosition );
-			var newTransform = new Transform( selectedPosition, Rotation.Identity, Vector3.One );
+			Vector3 position = TakeSpawnPosition( AvailableSpawnPositions );
+			var newTransform = new Transform( position, Rotation.Identity, Vector3.One );
 			var player = PlayerPrefab.Clone( newTransform, name: $"Player - {client.Name}" );
 			player.GetComponent<PlayerController>().UseInputControls = false;
 			player.NetworkSpawn( client );
 		}
+
+		for ( int i = 0; i < Bots.DesiredCount; i++ )
+		{
+			Vector3 position = TakeSpawnPosition( AvailableSpawnPositions );
+			BotManager.SpawnAt( PlayerPrefab, new Transform( position, Rotation.Identity, Vector3.One ), i );
+		}
+	}
+
+	private static Vector3 TakeSpawnPosition( List<Vector3> positions )
+	{
+		if ( positions == null || positions.Count == 0 ) return Vector3.Zero;
+		Vector3 selected = Sandbox.Game.Random.FromList( positions );
+		positions.Remove( selected );
+		return selected;
 	}
 
 	public void EnablePlayersInput()
@@ -47,6 +60,9 @@ public sealed class PlayerManager : Component, Component.INetworkListener
 	{
 		foreach ( var pc in Scene.GetAllComponents<PlayerController>() )
 		{
+			// Bots must stay input-suppressed — otherwise the host's live input
+			// drives every bot's PlayerController.
+			if ( pc.IsBot() ) continue;
 			pc.UseInputControls = true;
 		}
 	}

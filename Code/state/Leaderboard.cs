@@ -6,54 +6,62 @@ using System.Collections.Generic;
 /// a win) and <see cref="LobbyNetworkSpawner"/> (snapshot for late joiners). Because
 /// every client applies every increment locally, in the event of host migration it is a no-op,
 /// the new host already has the full history.
+///
+/// Ids are strings of the form <c>"steam:{steamId}"</c> for real players or
+/// <c>"bot:{slot}"</c> for AI bots. Use <see cref="PlayerId"/> / <see cref="BotId"/>
+/// to construct them rather than hand-formatting.
 /// </summary>
 public static class Leaderboard
 {
-    private static readonly Dictionary<ulong, int> _wins = new();
+    private static readonly Dictionary<string, int> _wins = new();
 
-    /// <summary>Steam ID of the player who won the most recent round, or 0 if no round has been played yet.</summary>
-    public static ulong PreviousWinnerSteamId { get; private set; }
+    /// <summary>Id of the player who won the most recent round, or null if no round has been played yet.</summary>
+    public static string PreviousWinnerId { get; private set; }
 
-    public static int GetWins( ulong steamId )
+    public static string PlayerId( ulong steamId ) => $"steam:{steamId}";
+    public static string BotId( int slot ) => $"bot:{slot}";
+
+    public static int GetWins( string id )
     {
-        return _wins.GetValueOrDefault( steamId, 0 );
+        if ( string.IsNullOrEmpty( id ) ) return 0;
+        return _wins.GetValueOrDefault( id, 0 );
     }
 
-    public static void RecordWin( ulong steamId )
+    public static void RecordWin( string id )
     {
-        if ( steamId == 0 ) return;
-        _wins[steamId] = GetWins( steamId ) + 1;
-        PreviousWinnerSteamId = steamId;
+        if ( string.IsNullOrEmpty( id ) ) return;
+        _wins[id] = GetWins( id ) + 1;
+        PreviousWinnerId = id;
     }
 
     // Overwrite the local store with the host's authoritative view. Safe to call on
     // clients that are already in sync, they just re-set the same values.
-    public static void ApplySnapshot( ulong[] steamIds, int[] counts, ulong previousWinnerSteamId )
+    public static void ApplySnapshot( string[] ids, int[] counts, string previousWinnerId )
     {
-        if ( steamIds == null || counts == null ) return;
+        if ( ids == null || counts == null ) return;
         _wins.Clear();
-        int n = System.Math.Min( steamIds.Length, counts.Length );
+        int n = System.Math.Min( ids.Length, counts.Length );
         for ( int i = 0; i < n; i++ )
         {
-            if ( steamIds[i] == 0 ) continue;
-            _wins[steamIds[i]] = counts[i];
+            if ( string.IsNullOrEmpty( ids[i] ) ) continue;
+            _wins[ids[i]] = counts[i];
         }
-        PreviousWinnerSteamId = previousWinnerSteamId;
+        PreviousWinnerId = previousWinnerId;
     }
 
     // Return a snapshot of the current store for broadcasting to late joiners.
-    public static (ulong[] ids, int[] counts, ulong previousWinnerSteamId) Snapshot()
+    public static (string[] ids, int[] counts, string previousWinnerId) Snapshot()
     {
         int count = _wins.Count;
-        ulong[] ids = new ulong[count];
+        string[] ids = new string[count];
         int[] counts = new int[count];
         int i = 0;
-        foreach ( KeyValuePair<ulong, int> kvp in _wins )
+        foreach ( KeyValuePair<string, int> kvp in _wins )
         {
             ids[i] = kvp.Key;
             counts[i] = kvp.Value;
             i++;
         }
-        return (ids, counts, PreviousWinnerSteamId);
+        return (ids, counts, PreviousWinnerId);
     }
 }
