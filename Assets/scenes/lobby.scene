@@ -2180,8 +2180,7 @@
               "Flags": 0,
               "Delta": 1,
               "InteractAction": "Use",
-              "InteractRadius": 10,
-              "MaxInteractDistance": 250,
+              "InteractPrompt": "Use",
               "Model": {
                 "_type": "gameobject",
                 "go": "e4ef9b40-1b94-4851-ba6a-25a99a0af0e6"
@@ -2275,8 +2274,7 @@
               "Flags": 0,
               "Delta": -1,
               "InteractAction": "Use",
-              "InteractRadius": 10,
-              "MaxInteractDistance": 250,
+              "InteractPrompt": "Use",
               "Model": {
                 "_type": "gameobject",
                 "go": "ba378a53-deb2-4497-8524-76a4cb0dbd32"

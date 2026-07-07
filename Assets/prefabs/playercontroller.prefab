@@ -316,6 +316,20 @@
         "Sound": "audio/sound_effects/player_impact.sound"
       },
       {
+        "__type": "PlayerInteractor",
+        "__guid": "a1b2c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+        "__enabled": true,
+        "Flags": 0,
+        "MaxInteractDistance": 200,
+        "ShowInteractGizmo": false,
+        "OnComponentDestroy": null,
+        "OnComponentDisabled": null,
+        "OnComponentEnabled": null,
+        "OnComponentFixedUpdate": null,
+        "OnComponentStart": null,
+        "OnComponentUpdate": null
+      },
+      {
         "__type": "Sandbox.Voice",
         "__guid": "e461b9b8-88a1-4b1e-b9aa-02b7fdbe4a47",
         "__enabled": true,

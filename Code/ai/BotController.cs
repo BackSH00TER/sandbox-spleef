@@ -207,21 +207,21 @@ public sealed class BotController : Component
 
 		bool leapReady = IsLeapReady();
 
-		if ( distanceXY <= JumpReach )
+		if ( distanceXY <= JumpReach ) // Jump
 		{
 			_controller.Jump( Vector3.Up * JumpUpVelocity );
 		}
-		else if ( distanceXY <= DiveReach && leapReady )
+		else if ( distanceXY <= DiveReach && leapReady ) // Leap
 		{
 			_leap.BeginLeap();
 		}
-		else if ( leapReady )
+		else if ( distanceXY <= JumpLeapReach && leapReady ) // Jump + Leap
 		{
 			_controller.Jump( Vector3.Up * JumpUpVelocity );
 			_isComboLeapPending = true;
 			_sinceComboJump = 0f;
 		}
-		else
+		else // Fallback to jump
 		{
 			_controller.Jump( Vector3.Up * JumpUpVelocity );
 		}
